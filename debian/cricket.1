@@ -1,0 +1,48 @@
+.TH CRICKET 1
+.\" NAME should be all caps, SECTION should be 1-8, maybe w/ subsection
+.\" other parms are allowed: see man(7), man(1)
+.ds c /etc/cricket
+.SH NAME
+cricket \- A program to manage the collection and display of time-series data
+.SH SYNOPSIS
+.B cricket-compile
+.br
+.B /usr/share/cricket/collector
+.br
+.B /usr/lib/cgi-bin/cricket/grapher.cgi
+.SH "DESCRIPTION"
+This manual page documents briefly the programs associated with Cricket.
+.TP
+.B cricket-compile
+.br
+The \fBcricket-compile\fR
+program compiles the Cricket config tree (found in \fI\*c\fR) into the format
+read by the collector. It is normally run after editing the files in the
+config tree. No options are needed.
+.TP
+.B collector
+The
+.B collector
+program reads a Cricket configuration from \fI\*c\fR, compiled by the
+.B cricket-compile
+command, and collects and stores data according to the information found there.
+It is normally run periodically from a \fBcron\fR(8) job.
+.TP
+.B grapher.cgi
+\fBgrapher.cgi\fR is a CGI program to display the data collected by
+Cricket in a graphical format. It is usually accessed using a web
+browser, e.g. using the URL http://localhost/cgi-bin/cricket/grapher.cgi.
+It will allow you to navigate around all of the targets in the config
+tree.
+.PP
+This manual page was written for the Debian GNU/Linux distribution
+because the original program does not have a manual page.
+Instead, it has documentation in the HTML format; see below.
+.SH "SEE ALSO"
+The programs are documented fully by various HTML documents
+available via the help system, or directly in /usr/share/doc/cricket.
+.br
+dhelp(1), dwww(1), cron(8)
+.SH AUTHOR
+This manual page was written by Matt Zimmerman <mdz@debian.org>,
+for the Debian GNU/Linux system (but may be used by others).

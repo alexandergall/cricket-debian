@@ -1,0 +1,100 @@
+#!/usr/bin/make -f
+
+#export DH_VERBOSE=1
+
+include /usr/share/quilt/quilt.make
+
+tmp:=`pwd`/debian/cricket
+
+build: build-stamp
+build-stamp: debian/stamp-patched
+	dh_testdir
+
+	touch build-stamp
+
+clean:
+	dh_testdir
+	dh_testroot
+	rm -f build-stamp
+
+	debian/rules unpatch
+
+	dh_clean
+
+install: build-stamp
+	dh_testdir
+	dh_testroot
+	dh_prep
+	dh_installdirs var/lib/cricket var/log/cricket etc/logrotate.d \
+	var/cache/cricket usr/share/doc/cricket usr/share/man/man1 usr/bin \
+	etc/apache2/conf.d
+
+	dh_install
+
+# Apache config file.
+	cp debian/apache debian/cricket/etc/apache2/conf.d/cricket
+
+# Command-line programs
+	install -c -m 755 compile $(tmp)/usr/bin/cricket-compile
+
+# Symlinks
+	ln -s ../../lib/cgi-bin/cricket/grapher.cgi $(tmp)/usr/share/cricket/grapher.cgi
+	ln -s ../../lib/cgi-bin/cricket/mini-graph.cgi $(tmp)/usr/share/cricket/mini-graph.cgi
+
+# Documentation
+	cp -R doc $(tmp)/usr/share/doc/cricket/html
+	ln -s html $(tmp)/usr/share/doc/cricket/doc
+	ln -s examples $(tmp)/usr/share/doc/cricket/sample-config
+
+# logrotate configuration
+	install -c -m 644 debian/logrotate $(tmp)/etc/logrotate.d/cricket
+
+# Manpage symlink
+	ln -s cricket.1.gz $(tmp)/usr/share/man/man1/cricket-compile.1.gz
+
+# Fix permissions
+	chmod -x $(tmp)/usr/share/cricket/*/*.pm $(tmp)/usr/share/cricket/util/LeanODBC/*
+	chmod +x $(tmp)/usr/share/cricket/util/perfInfo.pl $(tmp)/usr/share/cricket/util/LeanODBC/test.pl
+
+# Remove uneeded file
+	rm debian/cricket/usr/share/cricket/util/run-subtree.old
+
+# Build and install the wrapper
+	gcc -o debian/grapher.cgi debian/wrapper.c
+	gcc -o debian/mini-graph.cgi debian/wrapper-mini.c
+	chmod 755 debian/grapher.cgi
+	chmod 755 debian/mini-graph.cgi
+	mv $(tmp)/usr/lib/cgi-bin/cricket/grapher.cgi $(tmp)/usr/lib/cgi-bin/cricket/grapher-real.cgi
+	mv $(tmp)/usr/lib/cgi-bin/cricket/mini-graph.cgi $(tmp)/usr/lib/cgi-bin/cricket/mini-graph-real.cgi
+	mv debian/grapher.cgi $(tmp)/usr/lib/cgi-bin/cricket
+	mv debian/mini-graph.cgi $(tmp)/usr/lib/cgi-bin/cricket
+
+# Fix perl binary path
+	find debian/cricket -type f -exec perl -i -pe 's,/usr/local/bin/perl,/usr/bin/perl,' {} \;
+
+# Build architecture-independent files here.
+binary-indep: build install
+
+# Build architecture-dependent files here.
+binary-arch: build install
+	dh_testdir
+	dh_testroot
+	dh_installdocs README THANKS TODO debian/README.mod_perl
+	dh_installexamples sample-config/*
+	dh_installmenu
+	dh_installcron
+	dh_installman debian/cricket.1
+	dh_installchangelogs CHANGES
+	dh_link
+	dh_strip
+	dh_compress -Xexamples/
+	dh_fixperms
+	dh_installdeb
+	dh_perl 
+	dh_shlibdeps
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb -- -Zbzip2
+
+binary: binary-indep binary-arch
+.PHONY: build clean binary-indep binary-arch binary

@@ -1,0 +1,22 @@
+cricket for Debian
+----------------------
+
+- The Cricket config tree is read from /etc/cricket (an example is in
+  /usr/share/doc/cricket/examples)
+- The config tree compilation program (compile) is installed in /usr/bin
+  as cricket-compile.
+- The data collector (collector) and associated programs and libraries
+  are installed in /usr/share/cricket
+- The utility programs are in /usr/share/cricket/util
+- The grapher CGI programs are installed in /usr/lib/cgi-bin/cricket
+- You can access Cricket via <URL:http://localhost/cgi-bin/cricket/grapher.cgi>
+
+- Cricket's cron jobs run as user cricket, which owns the RRD
+  datafiles, logfiles, cached graphs, and the config tree
+- The grapher CGI runs as gid cricket, which has write permission on
+  /var/cache/cricket for the cached graphs, and read permission on the
+  config tree.
+
+ -- Matt Zimmerman <mdz@debian.org>
+
+$Id: README.Debian,v 1.8 2001/06/17 22:44:46 mdz Exp $

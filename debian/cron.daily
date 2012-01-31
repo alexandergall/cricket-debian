@@ -1,0 +1,13 @@
+#!/bin/sh
+
+test -d /usr/share/cricket || exit 0
+
+# Get a sensible cwd (why does cron not do this for us?)
+cd /
+
+#
+# Clean out the image cache, removing images that are older than one day.
+#
+su --shell=/bin/sh --command="find /var/cache/cricket -type f -mtime +1 -print0 | xargs --no-run-if-empty -0 rm -f" cricket
+
+exit 0

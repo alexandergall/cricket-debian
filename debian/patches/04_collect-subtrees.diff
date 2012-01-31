@@ -1,0 +1,205 @@
+--- cricket-1.0.5.orig/collect-subtrees
++++ cricket-1.0.5/collect-subtrees
+@@ -24,17 +24,13 @@
+ # argument, the subtree set it will process. It rolls the logfiles
+ # for that set, then runs the collector on that subtree set.
+ 
+-# it reads it's subtree sets from a config file, by default a file
++# it reads its subtree sets from a config file, by default a file
+ # in the cricket install directory named 'subtree-sets'. You can
+ # and should put the file somewhere else, and use the -cf argument
+ # to tell collect-subtrees where to find it.
+ 
+ BEGIN {
+-    my $programdir = (($0 =~ m:^(.*/):)[0] || "./") . ".";
+-    eval "require '$programdir/cricket-conf.pl'";
+-    eval "require '/usr/local/etc/cricket-conf.pl'"
+-        unless $Common::global::gInstallRoot;
+-    $Common::global::gInstallRoot ||= $programdir;
++    require '/etc/cricket/cricket-conf.pl';
+ }
+ 
+ $| = 1; # Useful if you want to tail -f a logfile while the collector runs! :)
+@@ -47,14 +43,14 @@
+ my @mHist;
+ my $gMailTo;
+ my $gDebug = 0;
+-my $gCF = "$Common::global::gInstallRoot/subtree-sets";
++my $gCF = "/etc/cricket/subtree-sets";
+ 
+ GetOptions( "cf=s" => \$gCF,
+             "mail|m=s" => \$gMailTo,
+             "debug|d" => \$gDebug,
+             );
+ 
+-my $gLogDir = "$Common::global::gCricketHome/log";
++my $gLogDir = $Common::global::gLogDir;
+ my $gBase = $Common::global::gConfigRoot;
+ my $gKeepLogs = 20;
+ my $gUser = getlogin || getpwuid($<);    # idiom from perlfunc manpage
+@@ -65,8 +61,8 @@
+ # Change this to = 1 if you want to get collection length statistics.
+ my $subtreeTimes = 0;
+ 
+-# Change this to your local mailer if you don't have /bin/mailx!
+-my $gMailer = '/bin/mailx';
++# Change this to your local mailer if you don't have /usr/bin/mailx!
++my $gMailer = '/usr/bin/mailx';
+ 
+ open(S, "<$gCF") ||
+     die("Could not read $gCF file.\n");
+@@ -112,7 +108,7 @@
+     my($subtreeRef) = $gSets{$s};
+     my(@output) = ();
+     my($debugFlag) = "";
+-    if (! defined($subtreeRef)) {
++    if (! defined($subtreeRef) && $s ne 'ALL') {
+         if($mOut == 1) {
+             push @mHist, "$0: unknown subtree name: $s\n";
+         } else {
+@@ -142,82 +138,87 @@
+         system("touch $lockfile");
+     }
+ 
+-    rollLogs($s);
+-    my $logfile = "$gLogDir/$s.0";
++    #rollLogs($s);
++    my $logfile = "$gLogDir/$s.log";
+     my $timelogfile = "$gLogDir/$s.times";
+     if(-f $timelogfile && -s $timelogfile >=  50000 && $subtreeTimes == 1) {
+         rename $timelogfile, "$timelogfile.old";
+     }
+ 
+     $debugFlag = "-loglevel debug" if ($gDebug == 1);
+-    my $args = "$debugFlag -base $gBase " . join(" ", @{$subtreeRef});
++    my $args = "$debugFlag -base $gBase ";
++    $args .= join(" ", @{$subtreeRef})
++      if ($s ne 'ALL');
+ 
+-    # Win32 does not support #! notation
+-    system((isWin32() ? "perl " : "") .
+-           "$Common::global::gInstallRoot/collector $args > $logfile 2>&1");
++    warn "$logfile: $!\n" unless open(LOG, ">>$logfile");
+ 
+-    # unlock it
+-    unlink($lockfile) if (!isWin32());
++    my $collector = "$Common::global::gInstallRoot/collector $args";
++    # Win32 does not support #! notation
++    $collector = "perl $collector" if (isWin32());
+ 
+-    # scan the logfile for errors and send them to stderr
+-    # so that cron sends them to the admin.
++    open(COLLECTOR, "$collector 2>&1|") || warn "collector: $!\n";
+ 
+-    if (open(L, "<$logfile")) {
+-        (open(TL, ">>$timelogfile") || print STDERR "Couldn't open $timelogfile: $!") unless (!$subtreeTimes == 1);
+-        my $lastWasError;
+-        my $skipLine;
+-
+-        my (@hist, @mHist) = ();
+-
+-        while (<L>) {
+-            # keep 5 lines of history
+-            push @hist, $_;
+-            shift @hist if ($#hist+1 > 5);
+-
+-            # errors are marked with a * after the date:
+-            #     [21-Dec-1998 15:57:54*] RRD error ...
+-
+-            if (/\*\] /) {
+-                if ($lastWasError) {
+-                    if($mOut == 1) {
+-                        push @mHist, $_;
+-                    } else {
+-                        print STDERR $_;
+-                    }
++    (open(TL, ">>$timelogfile") || print STDERR "Couldn't open $timelogfile: $!") unless (!$subtreeTimes == 1);
++    my $lastWasError;
++    my $skipLine;
++    
++    my (@hist, @mHist) = ();
++    
++    while (<COLLECTOR>) {
++        print LOG;
++
++        # scan for errors and send them to stderr so that cron sends
++        # them to the admin.
++
++        # keep 5 lines of history
++        push @hist, $_;
++        shift @hist if ($#hist+1 > 5);
++
++        # errors are marked with a * after the date:
++        #     [21-Dec-1998 15:57:54*] RRD error ...
++
++        if (/\*\] /) {
++            if ($lastWasError) {
++                if($mOut == 1) {
++                    push @mHist, $_;
+                 } else {
+-                    if($mOut == 1) {
+-                        push @mHist, "\nError and the lines leading up to it:\n";
+-                        push @mHist, @hist;
+-                    } else {
+-                        print STDERR "\nError and the lines leading up to it:\n";
+-                        print STDERR @hist;
+-                    }
++                    print STDERR $_;
+                 }
+-                $lastWasError = 1;
+             } else {
+-                if ($skipLine) {
+-                    if($mOut == 1) {
+-                        push @mHist, "\n";
+-                    } else {
+-                        print STDERR "\n";
+-                    }
+-                    $skipLine = 0;
++                if($mOut == 1) {
++                    push @mHist, "\nError and the lines leading up to it:\n";
++                    push @mHist, @hist;
++                } else {
++                    print STDERR "\nError and the lines leading up to it:\n";
++                    print STDERR @hist;
++                }
++            }
++            $lastWasError = 1;
++        } else {
++            if ($skipLine) {
++                if($mOut == 1) {
++                    push @mHist, "\n";
++                } else {
++                    print STDERR "\n";
+                 }
+-                $lastWasError = 0;
++                $skipLine = 0;
+             }
++            $lastWasError = 0;
+         }
+-        close(L);
+ 
+-        if ($subtreeTimes == 1) {
+-            print TL $hist[$#hist];
+-            close(TL);
+-        }
++    }
++    close(COLLECTOR);
+ 
+-        if(defined($mOut)) {
+-            mailHist($s, @mHist);
+-        }
+-    } else {
+-        warn("Could not scan logfile $logfile for errors: $!\n");
++    # unlock it
++    unlink($lockfile) if (!isWin32());
++
++    if ($subtreeTimes == 1) {
++        print TL $hist[$#hist];
++        close(TL);
++    }
++    
++    if(defined($mOut)) {
++        mailHist($s, @mHist);
+     }
+ }
+ 

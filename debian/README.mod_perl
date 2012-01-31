@@ -1,0 +1,20 @@
+Instructions from Andrew Shugg <andrew@neep.com.au> on using cricket
+with mod_perl on Debian:
+
+  To allow cricket to run under mod_perl in a standard Debian setup, the
+  following needs to be done:
+
+  o add the 'www-data' user to the 'cricket' group (eg use vigr)
+  o add the following lines to /etc/apache/httpd.conf
+      <Location /cgi-bin/cricket/>
+          SetHandler perl-script
+          PerlHandler Apache::Registry
+      </Location>
+  o restart Apache (while a simple reload will pick up the change to
+    the conf file, the server children need to be killed and fresh ones
+    started in order to pick up the change to the www-data user)
+
+
+ -- Matt Zimmerman <mdz@debian.org>
+
+$Id: README.mod_perl,v 1.2 2002/05/14 00:51:01 mdz Exp $

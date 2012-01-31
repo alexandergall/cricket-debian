@@ -1,0 +1,5 @@
+collect-subtrees collector collector_th		usr/share/cricket
+debian/cricket-conf.pl subtree-sets		etc/cricket
+grapher.cgi mini-graph.cgi			usr/lib/cgi-bin/cricket
+lib images util					usr/share/cricket
+sample-config/Defaults				etc/cricket/config

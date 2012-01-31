@@ -1,0 +1,7 @@
+Alias /cricket /usr/share/cricket
+	<Directory /usr/share/cricket>
+	Options ExecCGI FollowSymLinks
+	order deny,allow
+	deny from all
+	allow from all
+</Directory>

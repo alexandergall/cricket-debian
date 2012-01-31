@@ -1,0 +1,4 @@
+version=3
+
+opts="uversionmangle=s/\-pre1//" \
+http://sf.net/cricket/cricket-(.*)\.tar\.gz

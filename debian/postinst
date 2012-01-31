@@ -1,0 +1,114 @@
+#! /bin/sh
+# postinst script for cricket
+#
+# see: dh_installdeb(1)
+
+set -e
+
+# summary of how this script can be called:
+#        * <postinst> `configure' <most-recently-configured-version>
+#        * <old-postinst> `abort-upgrade' <new version>
+#        * <conflictor's-postinst> `abort-remove' `in-favour' <package>
+#          <new-version>
+#        * <deconfigured's-postinst> `abort-deconfigure' `in-favour'
+#          <failed-install-package> <version> `removing'
+#          <conflicting-package> <version>
+# for details, see /usr/doc/packaging-manual/
+#
+# quoting from the policy:
+#     Any necessary prompting should almost always be confined to the
+#     post-installation script, and should be protected with a conditional
+#     so that unnecessary prompting doesn't happen if a package's
+#     installation fails and the `postinst' is called with `abort-upgrade',
+#     `abort-remove' or `abort-deconfigure'.
+
+case "$1" in
+    configure)
+
+    # Handle addition of the 'cricket' user and group
+    if getent passwd cricket >/dev/null; then
+	# User already exists
+
+	# If we have a user but no group, add the group.  We started
+	# creating a group in 1.0.2-7
+	if ! getent group cricket >/dev/null; then
+	    groupadd --system cricket
+            useradd cricket cricket
+	fi
+
+    else
+	# Create user
+
+	# Make sure the group does not already exist
+	if getent group cricket >/dev/null; then
+	    groupdel cricket
+	fi
+
+	useradd --system --home /var/lib/cricket cricket
+    fi
+
+    #
+    # Permissions
+    #
+
+    # The collector, compiler, etc. run as uid=cricket
+    chown cricket /var/lib/cricket /var/log/cricket /etc/cricket/config \
+		    /var/cache/cricket
+
+    # The grapher runs as gid=cricket
+    chgrp cricket /var/cache/cricket /etc/cricket/config \
+	/usr/lib/cgi-bin/cricket/mini-graph.cgi \
+	/usr/lib/cgi-bin/cricket/grapher.cgi
+    chmod 750 /etc/cricket/config
+    chmod g+s /usr/share/cricket/mini-graph.cgi \
+	/usr/share/cricket/grapher.cgi
+    chmod g+rwx /var/cache/cricket
+
+    #
+    # Configuration
+    #
+
+    # Compile the config tree
+    touch /etc/cricket/config/Defaults
+    cricket-compile
+
+    #
+    # Upgrades
+    #
+
+    # Remove garbage logfiles created by the bad logrotate configuration in
+    # 0.70-1 and 0.72-1
+    find /var/log/cricket -name 'cricket.log.[0-9]*.*' -print0 | xargs -0 rm -f
+
+    # Handle move from /var/state/cricket to /var/lib/cricket (as of 1.0.2-3)
+    if [ -d /var/state/cricket ] \
+	&& dpkg --compare-versions "$2" lt 1.0.2-3; then
+
+	cat <<EOF
+
+Attention!  /var/state/cricket has moved to /var/lib/cricket.  I have
+attempted to preserve any data that was there.  If you have edited
+/etc/cricket/Defaults, be sure to change dataDir to point to the new
+location.
+EOF
+	for subdirs in /var/state/cricket/*; do
+	    mv $subdirs /var/lib/cricket
+	done
+	rmdir /var/state/cricket || true
+    fi
+
+    ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+
+    ;;
+
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 0
+    ;;
+esac
+
+#DEBHELPER#
+
+exit 0

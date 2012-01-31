@@ -1,0 +1,23 @@
+This package was debianized by Matt Zimmerman <mdz@debian.org> on
+Sun, 15 Aug 1999 11:47:55 -0700.
+
+It was downloaded from http://www.munitions.com/~jra/cricket/download.html
+
+Upstream Author: Jeff Allen <jra@corp.webtv.net>
+
+Copyright:
+
+-- [from the README distributed with Cricket]
+
+Cricket is covered by the GNU General Public Licensse. 
+See the file COPYING for copying permission.
+
+Cricket is Copyright (c) 1998 by Jeff Allen and WebTV Networks, Inc.
+
+Individual pieces are copyrighted by their contributors, though
+they are covered by same license as Cricket, namely the GPL.
+
+--
+
+On Debian GNU/Linux systems, the text of the GPL can be found in
+/usr/share/common-licenses/GPL.

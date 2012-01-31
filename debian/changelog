@@ -1,0 +1,549 @@
+cricket (1.0.5-19) unstable; urgency=low
+
+  * Another not an useradd option (--group)
+
+ -- Christian Marillat <marillat@debian.org>  Tue, 31 Jan 2012 16:11:01 +0100
+
+cricket (1.0.5-18) unstable; urgency=low
+
+  * --disabled-password isn't an useradd option (Closes: #657686)
+
+ -- Christian Marillat <marillat@debian.org>  Sun, 29 Jan 2012 08:59:59 +0100
+
+cricket (1.0.5-17) unstable; urgency=low
+
+  * Remove --quiet option in previous change (Closes: #657686).
+
+ -- Christian Marillat <marillat@debian.org>  Sat, 28 Jan 2012 01:36:12 +0100
+
+cricket (1.0.5-16) unstable; urgency=low
+
+  * Call userdel/useradd and groupdel/groupadd in postrm and postinst scripts
+    (Closes: #619003).
+
+ -- Christian Marillat <marillat@debian.org>  Thu, 26 Jan 2012 18:58:25 +0100
+
+cricket (1.0.5-15) unstable; urgency=low
+
+  * Define a white color for background in Defaults configuration file
+    (Closes: #648982).
+
+ -- Christian Marillat <marillat@debian.org>  Wed, 07 Dec 2011 11:49:02 +0100
+
+cricket (1.0.5-14) unstable; urgency=low
+
+  * Update 07_Format.pm.x86_64 patch (Closes: #635574)
+
+ -- Christian Marillat <marillat@debian.org>  Wed, 03 Aug 2011 14:26:26 +0200
+
+cricket (1.0.5-13) unstable; urgency=low
+
+  * Added two wrappers in C to launch grapher.cgi and mini-graph.cgi with
+    the rigth permissions as perl-suid will be deprecated. Architecture is
+    now any.
+
+ -- Christian Marillat <marillat@debian.org>  Sat, 22 May 2010 18:24:44 +0200
+
+cricket (1.0.5-12) unstable; urgency=low
+
+  * touch /etc/cricket/config/Defaults in the postinst this seems to fix
+    this bug. Thanks to Arnaud de Bossoreille de Ribou (Closes: #171410).
+  * Remove perl-suid dependency (Closes: #581949).
+  * Document in manpage that cricket-compile don't need command line options
+    (Closes: #176957).
+
+ -- Christian Marillat <marillat@debian.org>  Wed, 19 May 2010 12:18:41 +0200
+
+cricket (1.0.5-11) unstable; urgency=low
+
+  * Thanks Mats Erik Andersson for the following fix :
+    o Resolve the 'dir-or-file-in-var-www' RC-bug. (Closes: #553531)
+      + Remove linking of '/var/www/cricket/images' to
+        '/usr/share/cricket/images'.
+      + Insert the correct path '/usr/share/cricket/images/failed.png' into
+        'mini-graph.cgi' and 'grapher.cgi'. The old link would have fetched
+        the image from this location anyway.
+
+ -- Christian Marillat <marillat@debian.org>  Tue, 12 Jan 2010 03:35:52 +0100
+
+cricket (1.0.5-10) unstable; urgency=low
+
+  * In /usr/share/cricket/util/getFormat.c add ; at the end of line (More
+    easy for copy/paste) (Closes: #428532).
+  * Fix wrong value for liveHead (Closes: #520280)
+  * Removed unused dpatch header in quilt diff (Closes: #527214).
+
+ -- Christian Marillat <marillat@debian.org>  Wed, 06 May 2009 09:52:59 +0200
+
+cricket (1.0.5-9) unstable; urgency=low
+
+  * This time check if groupdel exist before removing the cricket user (Closes: #416737).
+  * Added hourly (10 hours) graph support from CVS.
+  * Added patch from CVS to cut trailing space correctly (Closes: #408943).
+  * Finally, I've found the bug for empty value in Cur: (Closes: #427086).
+
+ -- Christian Marillat <marillat@debian.org>  Wed, 06 Jun 2007 19:34:26 +0200
+
+cricket (1.0.5-8) unstable; urgency=low
+
+  * Added patch from Ubuntu to enable amd64 support (Closes: #418874)
+
+ -- Christian Marillat <marillat@debian.org>  Tue, 22 May 2007 08:52:51 +0200
+
+cricket (1.0.5-7) unstable; urgency=low
+
+  * Check if deluser exist before removing the cricket user (Closes: #416737).
+  * New patch 06_Format.pm to display current values on alpha (Closes: #416834).
+
+ -- Christian Marillat <marillat@debian.org>  Mon, 09 Apr 2007 10:37:30 +0200
+
+cricket (1.0.5-6) unstable; urgency=low
+
+  * Remove debconf note which is 5 years old (Closes: #387342, #388880)
+
+ -- Christian Marillat <marillat@debian.org>  Fri, 20 Oct 2006 17:31:46 +0200
+
+cricket (1.0.5-5) unstable; urgency=low
+
+  * Add debconf Portuguese translation (Closes: #378889)
+  * Add debconf Czech translation (Closes: #382229)
+  * Convert all others po files to UTF-8.
+
+ -- Christian Marillat <marillat@debian.org>  Wed, 16 Aug 2006 11:09:27 +0200
+
+cricket (1.0.5-4) unstable; urgency=low
+
+  * New maintainer (Closes: #365634)
+  * Use dpatch.
+  * New patch 02_grapher.cgi to escape : in date (Closes: #335473)
+  * New patch 03_File.pm to work with latest rrd version.
+  * Fix path in /etc/cron.d/cricket (Closes: #309513)
+  * Add a '| debconf-2.0' dependency to debconf (Closes: #331785)
+  * Don't move neta-paper directory (Closes: #196351)
+  * Fix mailx path (Closes: #196359)
+  * Remove duplicate line in begginer.html (Closes: #280739)
+  * Remove uneeded run-subtree.old file (Closes: #253652)
+  * Don't need to Pre-Depend on adduser only depends (Closes: #255783)
+  * Add gettext-based debconf templates (Closes: #205814)
+  * Add French translation of gettext debconf templates (Closes: #207119)
+  * Fix wrong OID in examples/systemperf/Defaults (Closes: #279837)
+  * New patch to add support for blazer webbrowser (Closes: #192491)
+
+ -- Christian Marillat <marillat@debian.org>  Thu,  4 May 2006 14:53:54 +0200
+
+cricket (1.0.5-3) unstable; urgency=low
+
+  * Fix shebang, BEGIN block in threaded collector (collector_th), should
+    be considered experimental (Closes: #248645)
+
+ -- Matt Zimmerman <mdz@debian.org>  Wed, 12 May 2004 09:58:17 -0700
+
+cricket (1.0.5-2) unstable; urgency=low
+
+  * Fix "Bizarre copy of ARRAY in aassign" with perl 5.8.4 (Closes: #247227)
+
+ -- Matt Zimmerman <mdz@debian.org>  Sat,  8 May 2004 10:25:09 -0700
+
+cricket (1.0.5-1) unstable; urgency=low
+
+  * New upstream release
+  * Remove duplicate urlTarget definition
+
+ -- Matt Zimmerman <mdz@debian.org>  Tue,  6 Apr 2004 14:39:37 -0700
+
+cricket (1.0.4-2) unstable; urgency=low
+
+  * Add collector_th
+  * Fix code to preserve permissions on config.db to avoid ending up with
+    a mode 0 file if there was no old file to copy the mode from
+    (Closes: #230142)
+
+ -- Matt Zimmerman <mdz@debian.org>  Sun,  1 Feb 2004 15:53:40 -0800
+
+cricket (1.0.4-1) unstable; urgency=low
+
+  * New upstream release(!)
+    - Fixes problems with newer libwww-perl (Closes: #214084)
+  * Don't source debconf confmodule in preinst (it wasn't being used)
+
+ -- Matt Zimmerman <mdz@debian.org>  Tue, 16 Dec 2003 16:29:23 -0800
+
+cricket (1.0.3+1.0.4pre1-4) unstable; urgency=low
+
+  * Use getent rather than id/sg to check for user/group existence
+  * Use adduser rather than usermod to add group membership
+  * Strip -thread-multi from archname in Format.pm (part of #171049)
+  * Fix indentation of debconf template (Closes: #162472)
+  * Cosmetic cleanup in cricket-conf.pl (Closes: #185946)
+  * Preserve permissions on config.db, thanks to Andrew Shugg
+    <andrew@neep.com.au> for the patch (Closes: #138565)
+
+ -- Matt Zimmerman <mdz@debian.org>  Sun, 23 Mar 2003 11:50:32 -0500
+
+cricket (1.0.3+1.0.4pre1-3) unstable; urgency=low
+
+  * Really include README.mod_perl this time 
+  * Pull fix from upstream CVS which broke the graph cache for the pathinfo
+    URL style, causing graphs for one target to be displayed for another
+
+ -- Matt Zimmerman <mdz@debian.org>  Wed,  7 Aug 2002 17:24:47 -0400
+
+cricket (1.0.3+1.0.4pre1-2) unstable; urgency=low
+
+  * Add Suggests: libsnmp-perl for systemPerfConf.pl
+  * Include sample config for systemperf and wbem
+  * Include alternate SNMP module
+
+ -- Matt Zimmerman <mdz@debian.org>  Wed, 15 May 2002 12:25:25 -0400
+
+cricket (1.0.3+1.0.4pre1-1) unstable; urgency=low
+
+  * New upstream pre-release
+  * Added README.mod_perl, with instructions on using Cricket with
+    mod_perl, thanks to Andrew Shugg <andrew@neep.com.au>
+  * Added Russian translation of debconf template from
+    ilgiz@bashtelecom.ru (Ilgiz Kalmetev) (Closes: #137629)
+
+ -- Matt Zimmerman <mdz@debian.org>  Mon, 13 May 2002 21:05:00 -0400
+
+cricket (1.0.3-11) unstable; urgency=low
+
+  * Add Depends: cron (Closes: #138214)
+
+ -- Matt Zimmerman <mdz@debian.org>  Wed, 13 Mar 2002 19:23:51 -0500
+
+cricket (1.0.3-10) unstable; urgency=low
+
+  * Update RRD/Format.pm to support sparc
+
+ -- Matt Zimmerman <mdz@debian.org>  Tue,  5 Feb 2002 22:12:51 -0500
+
+cricket (1.0.3-9) unstable; urgency=low
+
+  * Fix paths in get-collector-stats and
+    sample-config/subtree-times/Defaults.  Patch from Elmar Hoffmann
+    <elho@elho.net> (Closes: #129386)
+
+ -- Matt Zimmerman <mdz@debian.org>  Tue, 15 Jan 2002 19:14:16 -0500
+
+cricket (1.0.3-8) unstable; urgency=low
+
+  * Fix path to cricket-sm.gif in supplied Defaults file (thanks to Josip
+    Rodin <joy@cibalia.gkvk.hr>)
+  * Fix the config tree compiler to skip dpkg temporary and backup files
+    (Closes: #127100)
+  * Untaint data read from the config tree, which allows eval'd
+    expressions there to work.  Thanks to Niko Tyni
+    <ntyni+cricket@mappi.helsinki.fi> for the patch (Closes: #126778)
+  * Give up on asking the user whether to abort installation if they don't
+    want the config tree moved, and just display a note.  It is overly
+    complex to try to do this right, and not worth it.
+  * Adjust width/height hints to reflect what current rrdtool/libgd
+    actually output
+
+ -- Matt Zimmerman <mdz@debian.org>  Thu,  3 Jan 2002 16:01:36 -0500
+
+cricket (1.0.3-7) unstable; urgency=low
+
+  * Force the rest of util/* programs to use the correct path to
+    cricket-conf.pl, so that they can be configured there (part of
+    #126782)
+  * Add a documentation symlink sample-config -> examples, since the
+    documentation, et al refer to sample-config.
+  * Only present the note about moving the config tree when upgrading, not
+    when installing from scratch (yes, again) Closes: #126971
+  * Fix up the debconf question to actually ask a question in the short
+    description
+
+ -- Matt Zimmerman <mdz@debian.org>  Sun, 30 Dec 2001 00:02:52 -0500
+
+cricket (1.0.3-6) unstable; urgency=low
+
+  * Hack up collect-subtrees to report errors correctly.  Rather than
+    reading the logfile after finishing, just read the collector output
+    from a pipe and copy it to the log, reporting errors along the way.
+    (Closes: #123626)
+
+ -- Matt Zimmerman <mdz@debian.org>  Wed, 12 Dec 2001 19:50:24 -0500
+
+cricket (1.0.3-5) unstable; urgency=low
+
+  * Fix up cricket-conf loading in the collector, so that it works if run
+    manually
+
+ -- Matt Zimmerman <mdz@debian.org>  Tue, 11 Dec 2001 15:00:52 -0500
+
+cricket (1.0.3-4) unstable; urgency=low
+
+  * Only present the note about moving the config tree when upgrading
+    (Closes: #122418)
+
+ -- Matt Zimmerman <mdz@debian.org>  Tue,  4 Dec 2001 15:15:57 -0500
+
+cricket (1.0.3-3) unstable; urgency=low
+
+  * Add MAILTO directive to cron.d file (Closes: #119137)
+  * Fix listInterfaces to correctly find the Perl libraries
+    (Closes: #120178)
+  * Add German templates file from Sebastian Feltel <sebastian@feltel.de>
+    (Closes: #119941)
+  * Fix up a few file permissions to appease lintian
+
+ -- Matt Zimmerman <mdz@debian.org>  Mon, 19 Nov 2001 14:22:45 -0500
+
+cricket (1.0.3-2) unstable; urgency=medium
+
+  * Allow for spaces and other garbage in filenames when moving the config
+    tree (no bug yet, so hopefully this didn't burn anyone)
+
+ -- Matt Zimmerman <mdz@debian.org>  Sun, 11 Nov 2001 14:07:19 -0500
+
+cricket (1.0.3-1) unstable; urgency=low
+
+  * New upstream stable release.
+  * Very little changed from 1.0.3-pre4b, mostly documentation updates
+
+ -- Matt Zimmerman <mdz@debian.org>  Mon,  5 Nov 2001 21:55:52 -0500
+
+cricket (1.0.2+1.0.3-pre4b-1) experimental; urgency=low
+
+  * Updated to latest upstream development prerelease.  The code has
+    stabilized for the official 1.0.3 release. (Closes: #107514)
+  * User-visible highlights:
+    - SNMP version 2 support
+    - MAIL action tag for monitor thresholds
+    - The entire config tree is now read into memory for better
+      performance
+    - Fast abort for SNMP queries to hosts known to be down
+  * Now depend on libdigest-md5-perl instead of libmd5-perl, since the
+    code has been updated to use the newer interface
+  * Move libtime-hires-perl to Suggests, since it is only used by an
+    optional auxiliary script
+  * Install CGI scripts in /usr/lib/cgi-bin, and symlinks in
+    /usr/share/cricket, the reverse from previous releases.  This
+    eliminates the need for the webserver to follow symlinks
+    (Closes: #116737)
+  * Move the config tree from /etc/cricket to /etc/cricket/config, to make
+    room for new Cricket configuration files that are not part of the
+    config tree.  Warn the user via debconf before upgrading, and give
+    them the chance to bail.
+  * The full source code and config files have gone through
+    reindentation.  This will cause a minor pain when upgrading your
+    Defaults file, but it will reduce headaches in the long run.
+  * We now do data collection using collect-subtrees by default, which
+    should make it easier for folks who are using collect-subtrees anyway,
+    and bring it to the attention of people who aren't using it.  To this
+    end, modified collect-subtrees to support an ALL subtree which just
+    collects everything.
+
+ -- Matt Zimmerman <mdz@debian.org>  Thu,  1 Nov 2001 23:58:12 -0500
+
+cricket (1.0.2-17) unstable; urgency=low
+
+  * Fix broken link in doc/html/index.html, to ../README.Debian
+  * Add a symlink from doc/doc -> html, since much of the documentation
+    tells the user to look at doc/blah.html
+
+ -- Matt Zimmerman <mdz@debian.org>  Thu,  9 Aug 2001 18:44:33 -0400
+
+cricket (1.0.2-16) unstable; urgency=low
+
+  * Add "missingok" option to logrotate config file, to keep it from
+    failing if the collector is not running for whatever reason.
+
+ -- Matt Zimmerman <mdz@debian.org>  Tue, 24 Jul 2001 03:39:12 -0400
+
+cricket (1.0.2-15) unstable; urgency=low
+
+  * Move html documentation to /usr/share/doc/cricket/html, and the
+    neta-paper subdirectory to /usr/share/doc/cricket/neta-paper.
+    (Closes: #98628)
+
+ -- Matt Zimmerman <mdz@debian.org>  Thu, 24 May 2001 17:40:06 -0400
+
+cricket (1.0.2-14) unstable; urgency=low
+
+  * Update dependencies to reflect the split of libmd5-perl from
+    libdigest-md5-perl (Closes: #90602)
+
+ -- Matt Zimmerman <mdz@debian.org>  Wed, 21 Mar 2001 20:24:49 -0500
+
+cricket (1.0.2-13) unstable; urgency=low
+
+  * Fix bashism in postinst (Closes: #88004)
+
+ -- Matt Zimmerman <mdz@debian.org>  Wed, 28 Feb 2001 14:59:52 -0500
+
+cricket (1.0.2-12) unstable; urgency=low
+
+  * Remove defined() around array to avoid perl-5.6 warning
+    (Closes: #87794)
+
+ -- Matt Zimmerman <mdz@debian.org>  Tue, 27 Feb 2001 18:12:40 -0500
+
+cricket (1.0.2-11) unstable; urgency=low
+
+  * postrm: Remember to remove /etc/cricket, /var/cache/cricket,
+    /var/lib/cricket and /var/log/cricket on purge
+  * rules: Cleanup, 
+  * postinst: stricter permissions on /etc/cricket (only allow cricket
+    user and group, as there could be passwords in there)
+
+ -- Matt Zimmerman <mdz@debian.org>  Thu, 22 Feb 2001 23:17:36 -0500
+
+cricket (1.0.2-10) unstable; urgency=low
+
+  * Fix perl dependencies to work with the new perl
+  * Make sure we do the right thing in cron.daily if we are removed, but
+    not purged (cron.d already did)
+
+ -- Matt Zimmerman <mdz@debian.org>  Thu, 15 Feb 2001 14:07:21 -0500
+
+cricket (1.0.2-9) unstable; urgency=low
+
+  * postinst: Failsafe: make sure postinst doesn't fail if removal of
+    /var/state/cricket on upgrade is unsuccessful
+  * postinst: Use an if test to see if the cricket user exists, rather than
+    backticks.  This keeps us from failing due to set -e if the cricket
+    user does not exist yet (oops).
+
+ -- Matt Zimmerman <mdz@debian.org>  Tue, 16 Jan 2001 00:18:34 -0500
+
+cricket (1.0.2-8) unstable; urgency=low
+
+  * chdir to / before running the rest of cron.daily.  This prevents a
+    harmless error (find: cannot open current directory: Permission
+    denied).
+
+ -- Matt Zimmerman <mdz@debian.org>  Wed, 10 Jan 2001 17:12:53 -0500
+
+cricket (1.0.2-7) unstable; urgency=low
+
+  * Create a cricket group in addition to the cricket user.  This allows
+    us to stop creating files owned by nogroup, and avoid making anything
+    writable by www-data.
+  * The CGI scripts are now setgid cricket, to allow updating of
+    /var/cache/cricket (which used to be writable by www-data).  As such,
+    we now depend on perl5-suid.
+  * Overview of cricket's permissions setup added to README.Debian
+  * Minor changes to mini-graph.cgi and grapher.cgi so that they work in
+    taint mode (necessary for sgid operation)
+  * Run the cache-cleaning cron job as cricket, rather than as root.  It
+    was probably safe, but now it's safer.
+
+ -- Matt Zimmerman <mdz@debian.org>  Tue,  9 Jan 2001 16:11:17 -0500
+
+cricket (1.0.2-6) unstable; urgency=low
+
+  * Versioned dependency on librrds-perl.  It turns out that Cricket
+    now requires version 1.0.10 or above, though this isn't mentioned in
+    the installation documentation.  The required rrdtool version can be
+    decoded from the version in 'use RRDs 1.000101', where 1.000101 refers
+    to rrdtool 1.0.10, though the exact format doesn't seem to be
+    documented in rrdtool either.  I removed this dependency in a previous
+    version, but I have no idea why.  It should stay there.
+
+ -- Matt Zimmerman <mdz@debian.org>  Thu,  4 Jan 2001 23:35:37 -0500
+
+cricket (1.0.2-5) unstable; urgency=low
+
+  * Added a daily cron job to clean out /var/cache/cricket.  This
+    directory can contain a fixed maximum number of files (determined
+    roughly by the number of targets in the config tree), but once a file
+    is created, it is almost never removed. (Closes: #80238)
+  * Fixed some questionable upstream defaults.  I'd wanted to change these
+    for a long time, but was hesitant to diverge from upstream, lest
+    I break configuration compatibility and violate the principle of least
+    surprise.  I have since learned that these defaults will be changed in
+    the next upstream release (1.0.3), so I went ahead and made the
+    changes.  They are:
+    - Use bytes=false for the ifInOctets and ifOutOctets targets.  This
+      means that kb/sec, mb/sec, etc. will be computed as powers of 10 (1k
+      = 10^3 = 1000) rather than powers of 2 (1k = 2^10 = 1024).  Much
+      discussion on the cricket-users list has revealed that this is what
+      people expect.
+    - Use rrd-ds-type=DERIVE and rrd-min=0 for the default datasource.  This
+      means that new targets will be created so that if the current sample
+      of a counter is less than the previous sample, it will be discarded.
+      Previously, it would be assumed that the counter had overflowed, and
+      rrdtool would try to correct for that, assuming a 32-bit or 64-bit
+      counter.  This would cause large, bogus spikes when an SNMP device was
+      reset.  The vast majority of users would rather lose a sample in this
+      case (and when a counter overflow occurs) than get a bogus one.
+
+ -- Matt Zimmerman <mdz@debian.org>  Thu, 21 Dec 2000 23:28:37 -0500
+
+cricket (1.0.2-4) unstable; urgency=low
+
+  * Correctly find /usr/bin/cricket-compile when the config tree needs to
+    be recompiled by the collector. (Closes: #77819)
+
+ -- Matt Zimmerman <mdz@debian.org>  Mon, 27 Nov 2000 15:14:38 -0500
+
+cricket (1.0.2-3) unstable; urgency=low
+
+  * Pre-depend on adduser
+  * Removed a superfluous message about compiling the config tree from
+    postinst
+  * Updated to conform to policy 3.2.1.0:
+    - Moved /var/state/cricket to /var/lib/cricket
+  * Use dh_perl for perl dependency
+  * Don't depend on any specific version of librrds-perl
+
+ -- Matt Zimmerman <mdz@debian.org>  Sat, 11 Nov 2000 15:02:57 -0500
+
+cricket (1.0.2-2) unstable; urgency=low
+
+  * Don't compress examples, to avoid having some files compressed and not
+    others.  This makes it easier to copy in the example configuration as a
+    starting point (Closes: #74029).
+  * Updated maintainer email address (now an official maintainer)
+
+ -- Matt Zimmerman <mdz@debian.org>  Wed,  1 Nov 2000 22:25:15 -0500
+
+cricket (1.0.2-1) unstable; urgency=low
+
+  * New upstream version.
+  * Move cache from /tmp/cricket-cache (upstream default) to
+    /var/cache/cricket
+  * Fix from frozen 0.70-3, use find/xargs to do cleanup of over-rotated
+    logs.
+
+ -- Matt Zimmerman <mdz@csh.rit.edu>  Fri, 30 Jun 2000 21:15:09 -0400
+
+cricket (0.72-2) unstable; urgency=low
+
+  * Added commands to postinst to clean up after the bad logrotate config
+    in 0.70-1.
+
+ -- Matt Zimmerman <mdz@csh.rit.edu>  Tue,  2 May 2000 12:39:24 -0700
+
+cricket (0.72-1) unstable; urgency=low
+
+  * New upstream version (Closes: #56143)
+
+ -- Matt Zimmerman <mdz@csh.rit.edu>  Thu, 23 Mar 2000 15:20:02 -0800
+
+cricket (0.71-1) unstable; urgency=low
+
+  * New upstream version
+  * Added fix from cricket-users mailing list (\*:\s* should be \s*:\s*)
+  * Another fix from the mailing list: scaled{$dslist[$i %numDSs]} should be
+    scaled{$dslist[$i % $numDSs]} (generated an ugly message, but was
+    apparently harmless)
+  * Include THANKS with other documentation 
+
+ -- Matt Zimmerman <mdz@csh.rit.edu>  Mon, 10 Jan 2000 17:33:23 -0800
+
+cricket (0.70-2) unstable; urgency=low
+
+  * Fixed paths to failure.gif, so that it will be displayed if a graph
+    cannot be generated
+
+ -- Matt Zimmerman <mdz@csh.rit.edu>  Mon, 10 Jan 2000 13:56:40 -0800
+
+cricket (0.70-1) unstable; urgency=low
+
+  * Initial Release.
+
+ -- Matt Zimmerman <mdz@csh.rit.edu>  Sun, 15 Aug 1999 11:47:55 -0700

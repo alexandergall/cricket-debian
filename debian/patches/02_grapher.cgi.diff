@@ -1,0 +1,71 @@
+--- cricket-1.0.5.orig/grapher.cgi	2006-05-04 13:54:31.000000000 +0200
++++ cricket-1.0.5/grapher.cgi	2006-05-04 13:56:43.000000000 +0200
+@@ -23,19 +23,7 @@
+     # If you need to change anything in this script, it should only
+     # be here, in this BEGIN block. See the README for more info.
+ 
+-    my $programdir = (($0 =~ m:^(.*/):)[0] || "./") . ".";
+-    eval "require '$programdir/cricket-conf.pl'";
+-    if (!$Common::global::gInstallRoot && -l $0) {
+-        eval {
+-            my $link = readlink($0);
+-            my $dir = (($link =~ m:^(.*/):)[0] || "./") . ".";
+-            require "$dir/cricket-conf.pl";
+-        }
+-    }
+-    eval "require '/usr/local/etc/cricket-conf.pl'"
+-        unless $Common::global::gInstallRoot;
+-    $Common::global::gInstallRoot ||= $programdir;
+-    $Common::global::gConfigRoot ||= 'cricket-config';
++    require '/etc/cricket/cricket-conf.pl';
+     $Common::global::isGrapher = 1;
+ }
+ 
+@@ -230,8 +218,9 @@
+ 
+             # put the view into the target dict, so it's
+             # there if they want to use it.
+-            my($view) = lc $gQ->param('view');
++            my($view) = $gQ->param('view');
+             if (defined($view)) {
++                $view = lc $view;
+                 $targRef->{'auto-view'} = $view;
+             }
+ 
+@@ -554,6 +543,8 @@
+                     my($bv) = ($ENV{'HTTP_USER_AGENT'} =~ /\/(\d)/);
+                     if (defined($bv) && $bv <= 3) {
+                         $defFmt = 'gif';
++                    } elsif ($ENV{'HTTP_USER_AGENT'}=~/Blazer 1.0/i ) {
++                        $defFmt = 'gif';
+                     }
+ 
+                     my($format) = graphParam($gRef, 'graph-format', $defFmt);
+@@ -1490,6 +1481,7 @@
+         # things we pick up form the target dict
+         my($rrd) = $targRef->{'rrd-datafile'};
+         $lasttime = scalar(localtime(RRDs::last($rrd)));
++        $lasttime =~ s/:/\\:/g;
+ 
+         # use the dslist to create a set of defs/cdefs
+ 
+@@ -1601,8 +1593,8 @@
+             }
+ 
+             # push NaN bars on first in background
+-            $paintNaN && push @cdefs, "CDEF:unavail$ct=ds$ct,UN,INF,0,IF";
+-            $paintNaN && push @lines, "AREA:unavail$ct#FFCCCC";
++            $paintNaN && push @cdefs, "CDEF:unavail$ct=ds$ct,UN,INF,0,IF", "CDEF:unavailneg$ct=ds$ct,UN,NEGINF,0,IF";
++            $paintNaN && push @lines, "AREA:unavail$ct#FFCCCC", "AREA:unavailneg$ct#FFCCCC";
+ 
+             my($dsidx) = $dsnamemap{$ds};
+             if (defined($dsidx)) {
+@@ -1957,7 +1949,7 @@
+     my($picData) = suckPic($pic);
+ 
+     if (! defined($picData)) {
+-        $pic = "images/failed.gif";
++        $pic = "/usr/share/cricket/images/failed.gif";
+         $picData = suckPic($pic);
+         if (! defined($picData)) {
+             print $gQ->header('text/plain');

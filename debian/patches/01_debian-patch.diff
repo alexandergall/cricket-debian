@@ -1,0 +1,459 @@
+Index: cricket-1.0.5/doc/index.html
+===================================================================
+--- cricket-1.0.5.orig/doc/index.html	2011-08-23 15:14:00.409899435 +0200
++++ cricket-1.0.5/doc/index.html	2011-12-07 11:47:42.399453510 +0100
+@@ -7,6 +7,13 @@
+   <body>
+     <h1> Cricket Documentation </h1>
+     <ul>
++	<li><a href="../README.Debian">Cricket for Debian</a>
++
++	  <p>
++	    Important information about how Cricket has been adapted
++	    for Debian.  You should read this before any of the
++	    following documents.
++
+       <li>
+         <a href="beginner.html">Installing Cricket for
+         the Complete Beginner</a>
+Index: cricket-1.0.5/lib/snmp.pm
+===================================================================
+--- cricket-1.0.5.orig/lib/snmp.pm	2011-08-23 15:14:00.461897330 +0200
++++ cricket-1.0.5/lib/snmp.pm	2011-12-07 11:47:42.407453773 +0100
+@@ -79,7 +79,8 @@
+         my(@oidsToQuery) = ();
+ 
+         if ($#{ $snmpDSRef } >= 0) {
+-            my(@oidsToQuery) = my(@indices) = ();
++            my(@oidsToQuery) = ();
++            my(@indices) = ();
+             my($line);
+             while ($line = shift @{ $snmpDSRef }) {
+                 my($index, $oid) = split(/:/, $line);
+Index: cricket-1.0.5/lib/ConfigTree/Cache.pm
+===================================================================
+--- cricket-1.0.5.orig/lib/ConfigTree/Cache.pm	2011-08-23 15:14:00.493896035 +0200
++++ cricket-1.0.5/lib/ConfigTree/Cache.pm	2011-12-07 11:47:42.407453773 +0100
+@@ -145,7 +145,10 @@
+         $tags = '' unless defined($tags);
+ 
+         foreach $tag (split(/,/, $tags)) {
+-            $hash->{$tag} = $dbRef->{"d:$item:$dict:--default--:$tag"};
++            my $s = $dbRef->{"d:$item:$dict:--default--:$tag"};
++            # untaint; the config tree is trusted
++            $s =~ /^(.*)$/ and $s = $1;
++            $hash->{$tag} = $s;
+         }
+ 
+         # ...and try once for $name
+@@ -153,7 +156,10 @@
+         $tags = '' unless defined($tags);
+ 
+         foreach $tag (split(/,/, $tags)) {
+-            $hash->{$tag} = $dbRef->{"d:$item:$dict:$name:$tag"};
++            my $s = $dbRef->{"d:$item:$dict:$name:$tag"};
++            # untaint; the config tree is trusted
++            $s =~ /^(.*)$/ and $s = $1;
++            $hash->{$tag} = $s;
+         }
+     }
+ 
+Index: cricket-1.0.5/lib/ConfigTree/Node.pm
+===================================================================
+--- cricket-1.0.5.orig/lib/ConfigTree/Node.pm	2011-08-23 15:14:00.477896684 +0200
++++ cricket-1.0.5/lib/ConfigTree/Node.pm	2011-12-07 11:48:55.313863389 +0100
+@@ -168,9 +168,24 @@
+     my($file) = "$base/config.db.new";
+     my($finalFile) = "$base/config.db";
+     my($errorLevel);
++    my($file_uid,$file_gid,$file_mode);
++
++    # ideally, we shouldn't unlink($file) and then move the new
++    # one into its place with rename(): it would be better to rewrite
++    # $file in place (could be dangerous) or make the new database in
++    # a temporary place and then dump it on top of the existing one
++    # (equiv. to "cat foo > bar", preserving file ownership & mode).
++    #
++    # for now: cache the mode and ownership of $file, and do some sanity
++    # checking to make sure this routine doesn't fall over in a heap.
++    unless (-w $base) {
++    	Common::Log::Error("Don't have write permission on $base, creating a new file and fixing its permissions will be problematic at best");
++    }
++    ($file_mode,$file_uid,$file_gid) = (stat($finalFile))[2,4,5];
++
+     # we are being asked to do a complete rebuild, so start
+-    # from scratch
+-    unlink($file);
++    # from scratch: remove the temporary config.db if it exists.
++    unlink($file) if (-e $file);
+ 
+     my(%db);
+     my($dbh) = tie %db, 'DB_File', $file, O_CREAT|O_RDWR, 0644, $DB_BTREE;
+@@ -190,8 +205,14 @@
+     undef $dbh;
+     untie %db;
+ 
++    if (defined($file_mode) && !chmod($file_mode, $file)) {
++    	$file_mode = sprintf("%04o",$file_mode & 07777);
++    	Common::Log::Error("couldn't apply preserved file mode ($file_mode) to $file, fix manually");
++    }
++    if(defined($file_uid) && defined($file_gid) && !chown($file_uid, $file_gid, $file)) {
++    	Common::Log::Error("couldn't apply preserved file ownership ($file_uid/$file_gid) to $file, fix manually");
++    }
+     rename($file, $finalFile) or $errorLevel = $!;
+-
+     if ($errorLevel) {
+         Common::Log::Error("config.db.new could not be renamed to config.db!");
+         Common::Log::Error("Reason is: $errorLevel");
+@@ -584,6 +605,7 @@
+     $res = 1 if ($file =~ /\.dpkg-/);
+     $res = 1 if ($file =~ /^\./);
+     $res = 1 if ($file =~ /\/CVS$/);
++    $res = 1 if ($file =~ /\.dpkg-/);
+ 
+     return $res;
+ }
+Index: cricket-1.0.5/collector
+===================================================================
+--- cricket-1.0.5.orig/collector	2011-08-23 15:14:00.425898788 +0200
++++ cricket-1.0.5/collector	2011-12-07 11:47:42.407453773 +0100
+@@ -20,11 +20,7 @@
+ #    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ 
+ BEGIN {
+-    my $programdir = (($0 =~ m:^(.*/):)[0] || "./") . ".";
+-    eval "require '$programdir/cricket-conf.pl'";
+-    eval "require '/usr/local/etc/cricket-conf.pl'"
+-        unless $Common::global::gInstallRoot;
+-    $Common::global::gInstallRoot ||= $programdir;
++    require '/etc/cricket/cricket-conf.pl';
+ }
+ 
+ use lib "$Common::global::gInstallRoot/lib";
+@@ -81,9 +77,8 @@
+ if ($recomp) {
+     Warn("Config tree needs to be recompiled: $why");
+ 
+-    system( (Common::Util::isWin32() ? 'perl ' : '') .
+-            "$Common::global::gInstallRoot/compile " .
+-            "-base $Common::global::gConfigRoot");
++    system("/usr/bin/cricket-compile " .
++           "-base $Common::global::gConfigRoot");
+ 
+     $gCT = new ConfigTree::Cache;
+     $gCT->Base($Common::global::gConfigRoot);
+Index: cricket-1.0.5/collector_th
+===================================================================
+--- cricket-1.0.5.orig/collector_th	2011-08-23 15:14:00.453897655 +0200
++++ cricket-1.0.5/collector_th	2011-12-07 11:47:42.407453773 +0100
+@@ -20,11 +20,7 @@
+ #		Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ 
+ BEGIN {
+-	my $programdir = (($0 =~ m:^(.*/):)[0] || "./") . ".";
+-	eval "require '$programdir/cricket-conf.pl'";
+-	#eval "require '/usr/local/etc/cricket-conf.pl'"
+-	#	unless $Common::global::gInstallRoot;
+-	$Common::global::gInstallRoot ||= $programdir;
++    require '/etc/cricket/cricket-conf.pl';
+ }
+ 
+ 
+Index: cricket-1.0.5/compile
+===================================================================
+--- cricket-1.0.5.orig/compile	2011-08-23 15:14:00.625890695 +0200
++++ cricket-1.0.5/compile	2011-12-07 11:47:42.407453773 +0100
+@@ -20,11 +20,7 @@
+ #    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ 
+ BEGIN {
+-	my $programdir = (($0 =~ m:^(.*/):)[0] || "./") . ".";
+-	eval "require '$programdir/cricket-conf.pl'";
+-	eval "require '/usr/local/etc/cricket-conf.pl'"
+-					unless $Common::global::gInstallRoot;
+-	$Common::global::gInstallRoot ||= $programdir;
++  require '/etc/cricket/cricket-conf.pl';
+ }
+ 
+ use lib "$Common::global::gInstallRoot/lib";
+Index: cricket-1.0.5/mini-graph.cgi
+===================================================================
+--- cricket-1.0.5.orig/mini-graph.cgi	2011-08-23 15:14:00.437898302 +0200
++++ cricket-1.0.5/mini-graph.cgi	2011-12-07 11:47:42.407453773 +0100
+@@ -23,11 +23,10 @@
+     # This magic attempts to guess the install directory based
+     # on how the script was called. If it fails for you, just
+     # hardcode it.
+-    my $programdir = (($0 =~ m:^(.*/):)[0] || "./") . ".";
+-    eval "require '$programdir/cricket-conf.pl'";
+-    eval "require '/usr/local/etc/cricket-conf.pl'"
+-        unless $Common::global::gInstallRoot;
+-    $Common::global::gInstallRoot ||= $programdir;
++    require '/etc/cricket/cricket-conf.pl';
++
++    # Necessary for set[ug]id operation
++    $ENV{PATH} = '/bin:/usr/bin';
+ }
+ 
+ use lib "$Common::global::gInstallRoot/lib";
+@@ -106,7 +105,7 @@
+ 
+     if (! tryPng($png)) {
+         Warn("Could not open $png: $!");
+-        if (! tryPng("images/failed.png")) {
++        if (! tryPng("/usr/share/cricket/images/failed.png")) {
+             Warn("Could not send failure png: $!");
+             return;
+         }
+Index: cricket-1.0.5/subtree-sets
+===================================================================
+--- cricket-1.0.5.orig/subtree-sets	2011-08-23 15:14:00.637890208 +0200
++++ cricket-1.0.5/subtree-sets	2011-12-07 11:47:42.411453905 +0100
+@@ -1,14 +1,6 @@
+ # This file lists the subtrees that will be processed together in one
+ # set. See the comments at the beginning of collect-subtrees for more info.
+ 
+-# This will be passed to collector so it can find the Config Tree.
+-# If this directory does not start with a slash, it will
+-# have $HOME prepended.
+-base:	cricket-config
+-
+-# this is where logs will be put. (The $HOME rule applies here too.)
+-logdir:	cricket-logs
+-
+ set normal:
+ 	/routers
+ 	/router-interfaces
+Index: cricket-1.0.5/sample-config/atm-interfaces/Defaults
+===================================================================
+--- cricket-1.0.5.orig/sample-config/atm-interfaces/Defaults	2011-08-23 15:14:00.529894580 +0200
++++ cricket-1.0.5/sample-config/atm-interfaces/Defaults	2011-12-07 11:47:42.411453905 +0100
+@@ -6,7 +6,7 @@
+ target --default--
+     short-desc  =   "%swname%:  %interface-desc%"
+     long-desc   =   %interface-desc%
+-    util-dir    =   %auto-base%/../cricket/util
++    util-dir    =   /usr/share/cricket/util
+     inst        =   %InterfaceID%
+     snmp-community  =   public
+     snmp-host   =   %swname%
+Index: cricket-1.0.5/sample-config/Defaults
+===================================================================
+--- cricket-1.0.5.orig/sample-config/Defaults	2011-08-23 15:14:00.541894094 +0200
++++ cricket-1.0.5/sample-config/Defaults	2011-12-07 11:48:39.817351323 +0100
+@@ -3,7 +3,7 @@
+ #
+ 
+ Target    --default--
+-    dataDir             = %auto-base%/../cricket-data/%auto-target-path%
++    dataDir		= /var/lib/cricket/%auto-target-path%
+     email-program       = /usr/bin/mailx
+     rrd-datafile        = %dataDir%/%auto-target-name%.rrd
+     rrd-poll-interval   = 300
+@@ -125,7 +125,7 @@
+     <table width=100% cellpadding=3>
+         <tr>
+         <td>
+-            <a href="http://cricket.sourceforge.net/"><img align=left width=58 height=55 src="images/cricket-sm.gif" border=0></a>
++            <a href="http://cricket.sourceforge.net/"><img align=left width=58 height=55 src="/cricket/images/cricket-sm.gif" border=0></a>
+         </td>
+         <td width=15% valign=center>
+             <p align=left><font size=+2>
+@@ -137,7 +137,7 @@
+         </td>
+         <td width=120 valign=center>
+             <center>
+-            <a href="http://ee-staff.ethz.ch/~oetiker/webtools/rrdtool"><img width=120 height=34 src="images/rrdtool.gif" border=0></a>
++            <a href="http://ee-staff.ethz.ch/~oetiker/webtools/rrdtool"><img width=120 height=34 src="/cricket/images/rrdtool.gif" border=0></a>
+         </td>
+         </tr>
+     </table>
+@@ -174,6 +174,7 @@
+ color   orange          FF8000
+ color   burntorng       800000
+ color   purply          FB31FB
++color   white           ffffff
+ 
+ # this tells the grapher which colors to choose first, if
+ # it was not given colors
+Index: cricket-1.0.5/sample-config/http-performance/Defaults
+===================================================================
+--- cricket-1.0.5.orig/sample-config/http-performance/Defaults	2011-08-23 15:14:00.609891341 +0200
++++ cricket-1.0.5/sample-config/http-performance/Defaults	2011-12-07 11:47:42.411453905 +0100
+@@ -4,7 +4,7 @@
+                      <a href=\"%url%\">%url%</a>."
+     # you'll probably want to change this... unless you
+     # have Cricket in ~/cricket and your config tree in ~/cricket-config
+-    util-dir    =   %auto-base%/../cricket/util
++    util-dir    =   /usr/share/cricket/util
+     target-type =   http-performance
+     url         =   ""
+ 
+Index: cricket-1.0.5/sample-config/news-server/Defaults
+===================================================================
+--- cricket-1.0.5.orig/sample-config/news-server/Defaults	2011-08-23 15:14:00.513895227 +0200
++++ cricket-1.0.5/sample-config/news-server/Defaults	2011-12-07 11:47:42.411453905 +0100
+@@ -10,7 +10,7 @@
+ target --default--
+     # you'll probably want to change this... unless you
+     # have Cricket in ~/cricket and your config tree in ~/config
+-    util-dir    =   %auto-base%/../cricket/util
++    util-dir    =   /usr/share/cricket/util
+     remexec     =   "/usr/local/net/bin/ssh -l %user% %server%"
+     user        =   news
+     server      =   nntp-host
+Index: cricket-1.0.5/sample-config/portmasters/Defaults
+===================================================================
+--- cricket-1.0.5.orig/sample-config/portmasters/Defaults	2011-08-23 15:14:00.573892799 +0200
++++ cricket-1.0.5/sample-config/portmasters/Defaults	2011-12-07 11:47:42.411453905 +0100
+@@ -9,7 +9,7 @@
+     # fill in your domain name here
+     domain           = ""
+     snmp-host        = %portmaster%.%domain%
+-    pm3lineUsage     = "%auto-base%/../cricket/util/pmlines.pl"
++    pm3lineUsage     = "/usr/share/cricket/util/pmlines.pl"
+     pm3lines         = "%pm3lineUsage% %snmp-community%@%snmp-host%"
+     # you could set a router-specific community string here:
+     # snmp-community   = not-public
+Index: cricket-1.0.5/sample-config/subtree-times/Defaults
+===================================================================
+--- cricket-1.0.5.orig/sample-config/subtree-times/Defaults	2011-08-23 15:14:00.593891990 +0200
++++ cricket-1.0.5/sample-config/subtree-times/Defaults	2011-12-07 11:47:42.411453905 +0100
+@@ -14,7 +14,7 @@
+     directory-desc      = "Just how long is the collector taking?"
+     disable-short-desc  = true
+     long-desc           = "%auto-target-name% collector information"
+-    bindir              = %auto-base%/../cricket/util
++    bindir              = /usr/share/cricket/util
+ 
+ datasource  --default--
+     rrd-ds-type     =   GAUGE
+Index: cricket-1.0.5/sample-config/usr/Defaults
+===================================================================
+--- cricket-1.0.5.orig/sample-config/usr/Defaults	2011-08-23 15:14:00.561893285 +0200
++++ cricket-1.0.5/sample-config/usr/Defaults	2011-12-07 11:47:42.411453905 +0100
+@@ -9,7 +9,7 @@
+     domain      =   yournetwork.net
+     # you'll probably want to change this... unless you
+     # have Cricket in ~/cricket and your config tree in ~/config
+-    util-dir    =   %auto-base%/../cricket/util
++    util-dir    =   /usr/share/cricket/util
+     #snmp-community =   private
+     snmp-host   =   "%modem%.%domain%"
+     usrGetUsage =   "%auto-base%/../cricket/util/usrModemUsage"
+Index: cricket-1.0.5/util/LeanODBC/test.pl
+===================================================================
+--- cricket-1.0.5.orig/util/LeanODBC/test.pl	2011-08-23 15:14:00.665889075 +0200
++++ cricket-1.0.5/util/LeanODBC/test.pl	2011-12-07 11:47:42.411453905 +0100
+@@ -1,3 +1,4 @@
++#!/usr/bin/perl
+ # Before `make install' is performed this script should be runnable with
+ # `make test'. After `make install' it should work as `perl test.pl'
+ 
+@@ -74,4 +75,3 @@
+ print (($ret[0] == SQL_SUCCESS) ? "ok 14\n" : "not ok 14\n");
+ @ret = SQLFreeHandle(SQL_HANDLE_ENV,$henv);
+ print (($ret[0] == SQL_SUCCESS) ? "ok 15\n" : "not ok 15\n");
+-
+Index: cricket-1.0.5/util/dump-targets
+===================================================================
+--- cricket-1.0.5.orig/util/dump-targets	2011-08-23 15:14:00.653889562 +0200
++++ cricket-1.0.5/util/dump-targets	2011-12-07 11:47:42.411453905 +0100
+@@ -20,11 +20,7 @@
+ #    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ 
+ BEGIN {
+-	my $programdir = (($0 =~ m:^(.*/):)[0] || "./") . "..";
+-	eval "require '$programdir/cricket-conf.pl'";
+-	eval "require '/usr/local/etc/cricket-conf.pl'"
+-					unless $Common::global::gInstallRoot;
+-	$Common::global::gInstallRoot ||= $programdir;
++  require '/etc/cricket/cricket-conf.pl';
+ }
+ 
+ use lib "$Common::global::gInstallRoot/lib";
+Index: cricket-1.0.5/util/generate-statics
+===================================================================
+--- cricket-1.0.5.orig/util/generate-statics	2011-08-23 15:14:00.693887942 +0200
++++ cricket-1.0.5/util/generate-statics	2011-12-07 11:47:42.411453905 +0100
+@@ -20,11 +20,7 @@
+ #    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ 
+ BEGIN {
+-	my $programdir = (($0 =~ m:^(.*/):)[0] || "./") . "..";
+-	eval "require '$programdir/cricket-conf.pl'";
+-	eval "require '/usr/local/etc/cricket-conf.pl'"
+-					unless $Common::global::gInstallRoot;
+-	$Common::global::gInstallRoot ||= $programdir;
++  require '/etc/cricket/cricket-conf.pl';
+ }
+ 
+ use lib "$Common::global::gInstallRoot/lib";
+Index: cricket-1.0.5/util/get-collector-stats
+===================================================================
+--- cricket-1.0.5.orig/util/get-collector-stats	2011-08-23 15:14:00.725886647 +0200
++++ cricket-1.0.5/util/get-collector-stats	2011-12-07 11:47:42.411453905 +0100
+@@ -20,11 +20,7 @@
+ #    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ 
+ BEGIN {
+-   my $programdir = (($0 =~ m:^(.*/):)[0] || "./") . "..";
+-   eval "require '$programdir/cricket-conf.pl'";
+-   eval "require '/usr/local/etc/cricket-conf.pl'"
+-                 unless $Common::global::gInstallRoot;
+-   $Common::global::gInstallRoot ||= $programdir;
++  require '/etc/cricket/cricket-conf.pl';
+ }
+ 
+ use strict;
+@@ -41,12 +37,12 @@
+ my $when    = 0;
+ my $now		= time();
+ 
+-if (! -f "$Common::global::gCricketHome/cricket-logs/$subtree.times") {
+-	die "Couldn't find $Common::global::gCricketHome/cricket-logs/$subtree.times.\n";
++if (! -f "$Common::global::gLogDir/$subtree.times") {
++	die "Couldn't find $Common::global::gLogDir/$subtree.times.\n";
+ } else {
+-	@output = `tail -1 $Common::global::gCricketHome/cricket-logs/$subtree.times 2>&1`;
++	@output = `tail -1 $Common::global::gLogDir/$subtree.times 2>&1`;
+ 	if ($?) {
+-		die "Error tailing $Common::global::gCricketHome/cricket-logs/$subtree.times: $?\n"; }
++		die "Error tailing $Common::global::gLogDir/$subtree.times: $?\n"; }
+ }
+ 
+ if ($output[0] =~ /\[(.*?)\]\s+Processed\s+([0-9]+)\s+targets\s+in\s+(.*)\.$/) {
+Index: cricket-1.0.5/util/listInterfaces
+===================================================================
+--- cricket-1.0.5.orig/util/listInterfaces	2011-08-23 15:14:00.681888429 +0200
++++ cricket-1.0.5/util/listInterfaces	2011-12-07 11:47:42.411453905 +0100
+@@ -20,11 +20,7 @@
+ #    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ 
+ BEGIN {
+-    my $programdir = (($0 =~ m:^(.*/):)[0] || "./") . "..";
+-    eval "require '$programdir/cricket-conf.pl'";
+-    eval "require '/usr/local/etc/cricket-conf.pl'"
+-                    unless $Common::global::gInstallRoot;
+-    $Common::global::gInstallRoot ||= $programdir;
++        require '/etc/cricket/cricket-conf.pl';
+ }
+ 
+ use lib "$Common::global::gInstallRoot/lib";
+Index: cricket-1.0.5/util/rrd-tune
+===================================================================
+--- cricket-1.0.5.orig/util/rrd-tune	2011-08-23 15:14:00.709887296 +0200
++++ cricket-1.0.5/util/rrd-tune	2011-12-07 11:47:42.415454037 +0100
+@@ -20,11 +20,7 @@
+ #    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ 
+ BEGIN {
+-	my $programdir = (($0 =~ m:^(.*/):)[0] || "./") . "..";
+-	eval "require '$programdir/cricket-conf.pl'";
+-	eval "require '/usr/local/etc/cricket-conf.pl'"
+-					unless $Common::global::gInstallRoot;
+-	$Common::global::gInstallRoot ||= $programdir;
++  require '/etc/cricket/cricket-conf.pl';
+ }
+ 
+ use lib "$Common::global::gInstallRoot/lib";

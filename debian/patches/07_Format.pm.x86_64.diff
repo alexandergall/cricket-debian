@@ -1,0 +1,21 @@
+Index: cricket-1.0.5/lib/RRD/Format.pm
+===================================================================
+--- cricket-1.0.5.orig/lib/RRD/Format.pm	2009-04-26 10:52:51.000000000 +0200
++++ cricket-1.0.5/lib/RRD/Format.pm	2009-04-26 11:01:25.000000000 +0200
+@@ -160,6 +160,16 @@
+         $self->{'liveHead'} = "Q";
+         $self->{'rraPtr'} = "Q";
+         $self->{'element'} = "d";
++    } elsif ( $archname =~ /^x86_64-linux/ ) {
++        $self->{'statHead'} = "a4 a5 x7 d Q Q Q x80";
++        $self->{'dsDef'} = "a20 a20 Q d d x56";
++        $self->{'rraDef'} = "a20 x4 Q Q d x72";
++        $self->{'liveHead'} = "Q Q";
++        $self->{'liveHead3'} = "Q Q";
++        $self->{'pdpDef'} = "a30 x2 Q d x64";
++        $self->{'cdpDef'} = "d Q x64";
++        $self->{'rraPtr'} = "Q";
++        $self->{'element'} = "d";
+     } elsif ( $archname eq 'sparc64-netbsd' ) {
+         $self->{'statHead'} = "a4 a5 x7 d Q Q Q x80";
+         $self->{'dsDef'} = "a20 a20 Q d d x56";

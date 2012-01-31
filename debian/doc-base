@@ -1,0 +1,10 @@
+Document: cricket
+Title: Cricket Documentation
+Author: Jeff Allen
+Abstract: This manual describes what cricket is
+ and how it can be configured to collect and display time-series data
+Section: System/Monitoring
+
+Format: HTML
+Index: /usr/share/doc/cricket/html/index.html
+Files: /usr/share/doc/cricket/html/*.html
