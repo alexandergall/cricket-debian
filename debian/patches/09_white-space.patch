@@ -1,8 +1,17 @@
-Index: cricket-1.0.5/lib/Common/HandleTarget.pm
+From: Christian Marillat <marillat@debian.org>
+Date: Mon, 28 Jul 2014 10:35:04 +0200
+Subject: 09_white-space
+
 ===================================================================
---- cricket-1.0.5.orig/lib/Common/HandleTarget.pm	2003-12-23 02:19:30.000000000 +0100
-+++ cricket-1.0.5/lib/Common/HandleTarget.pm	2009-04-26 10:47:48.000000000 +0200
-@@ -157,7 +157,7 @@
+---
+ lib/Common/HandleTarget.pm |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/lib/Common/HandleTarget.pm b/lib/Common/HandleTarget.pm
+index 9645c6b..f1e2596 100644
+--- a/lib/Common/HandleTarget.pm
++++ b/lib/Common/HandleTarget.pm
+@@ -157,7 +157,7 @@ sub checkTargetInstance {
          my($span) = 0;
          my($spanlength);
  
@@ -11,7 +20,7 @@ Index: cricket-1.0.5/lib/Common/HandleTarget.pm
          ($args, $spanlength) = split(/:SPAN:/, $args, 2) if ($args =~ /SPAN/);
          if (defined ($spanlength) && $spanlength =~ /\d+/ ){
              $span = 1;
-@@ -169,17 +169,17 @@
+@@ -169,17 +169,17 @@ sub checkTargetInstance {
          my($actionType) = 'SNMP' ;
          my(@actionArgs);
          # search for an action tag

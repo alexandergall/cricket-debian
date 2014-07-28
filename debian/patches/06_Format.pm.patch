@@ -1,8 +1,17 @@
-Index: cricket-1.0.5/lib/RRD/Format.pm
+From: Christian Marillat <marillat@debian.org>
+Date: Mon, 28 Jul 2014 10:35:04 +0200
+Subject: 06_Format.pm
+
 ===================================================================
---- cricket-1.0.5.orig/lib/RRD/Format.pm	2009-04-26 10:51:40.000000000 +0200
-+++ cricket-1.0.5/lib/RRD/Format.pm	2009-04-26 10:52:51.000000000 +0200
-@@ -123,6 +123,7 @@
+---
+ lib/RRD/Format.pm |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/lib/RRD/Format.pm b/lib/RRD/Format.pm
+index 55fcb72..52dcb19 100644
+--- a/lib/RRD/Format.pm
++++ b/lib/RRD/Format.pm
+@@ -123,6 +123,7 @@ sub setArch {
          $self->{'cdpDef'} = "d L x4 x64";
  
          $self->{'liveHead'} = "L";
@@ -10,7 +19,7 @@ Index: cricket-1.0.5/lib/RRD/Format.pm
          $self->{'rraPtr'} = "L";
          $self->{'element'} = "d";
  
-@@ -150,7 +151,7 @@
+@@ -150,7 +151,7 @@ sub setArch {
          $self->{'liveHead'} = "L";
          $self->{'rraPtr'} = "L";
          $self->{'element'} = "d";

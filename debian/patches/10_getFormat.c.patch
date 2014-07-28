@@ -1,7 +1,16 @@
-Index: cricket-1.0.5/util/getFormat.c
+From: Christian Marillat <marillat@debian.org>
+Date: Mon, 28 Jul 2014 10:35:04 +0200
+Subject: 10_getFormat.c
+
 ===================================================================
---- cricket-1.0.5.orig/util/getFormat.c	2009-04-12 19:06:47.000000000 +0200
-+++ cricket-1.0.5/util/getFormat.c	2009-04-12 19:52:57.000000000 +0200
+---
+ util/getFormat.c |   20 +++++++++++---------
+ 1 file changed, 11 insertions(+), 9 deletions(-)
+
+diff --git a/util/getFormat.c b/util/getFormat.c
+index cb456e6..e0edbdd 100644
+--- a/util/getFormat.c
++++ b/util/getFormat.c
 @@ -22,7 +22,9 @@
  #include <time.h>
  #include <ctype.h>
@@ -13,7 +22,7 @@ Index: cricket-1.0.5/util/getFormat.c
  
  void format_stat_head (void) {
    stat_head_t h1;
-@@ -102,7 +104,7 @@
+@@ -102,7 +104,7 @@ void format_stat_head (void) {
    pad = sizeof(h1) - total;
  
    sprintf(rrdFormat, "%s x%d", rrdFormat, pad);
@@ -22,7 +31,7 @@ Index: cricket-1.0.5/util/getFormat.c
  }
  
  void format_ds_def (void) {
-@@ -153,7 +155,7 @@
+@@ -153,7 +155,7 @@ void format_ds_def (void) {
  	  sprintf(rrdFormat, "%s x%d", rrdFormat, pad);
    }
  
@@ -31,7 +40,7 @@ Index: cricket-1.0.5/util/getFormat.c
  }
  
  void format_rra_def   (void) {
-@@ -209,7 +211,7 @@
+@@ -209,7 +211,7 @@ void format_rra_def   (void) {
  	  sprintf(rrdFormat, "%s x%d", rrdFormat, pad);
    }
  
@@ -40,7 +49,7 @@ Index: cricket-1.0.5/util/getFormat.c
  }
  
  void format_live_head (void) {
-@@ -218,7 +220,7 @@
+@@ -218,7 +220,7 @@ void format_live_head (void) {
    memset(rrdFormat, 0, sizeof(rrdFormat));
  
    sprintf(rrdFormat, "%c", (sizeof(time_t)==8)?'Q':'L');
@@ -49,7 +58,7 @@ Index: cricket-1.0.5/util/getFormat.c
  }
  
  void format_pdp_prep  (void) {
-@@ -259,7 +261,7 @@
+@@ -259,7 +261,7 @@ void format_pdp_prep  (void) {
  	  sprintf(rrdFormat, "%s x%d", rrdFormat, pad);
    }
  
@@ -58,7 +67,7 @@ Index: cricket-1.0.5/util/getFormat.c
  }
  
  void format_cdp_prep  (void) {
-@@ -286,7 +288,7 @@
+@@ -286,7 +288,7 @@ void format_cdp_prep  (void) {
  	  sprintf(rrdFormat, "%s x%d", rrdFormat, pad);
    }
  
@@ -67,7 +76,7 @@ Index: cricket-1.0.5/util/getFormat.c
  }
  
  void format_rra_ptr   (void) {
-@@ -296,7 +298,7 @@
+@@ -296,7 +298,7 @@ void format_rra_ptr   (void) {
  
    sprintf(rrdFormat, "%c", (sizeof(&rrdFormat)==8)?'Q':'L');
  
@@ -76,7 +85,7 @@ Index: cricket-1.0.5/util/getFormat.c
  }
  
  void format_element   (void) {
-@@ -304,7 +306,7 @@
+@@ -304,7 +306,7 @@ void format_element   (void) {
  
    sprintf(rrdFormat, "d"); /* Assuming all data elements are just doubles *
  							  This is pretty safe */

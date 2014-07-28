@@ -1,8 +1,17 @@
-Index: cricket-1.0.5/grapher.cgi
+From: Christian Marillat <marillat@debian.org>
+Date: Mon, 28 Jul 2014 10:35:04 +0200
+Subject: 08_hourly
+
 ===================================================================
---- cricket-1.0.5.orig/grapher.cgi	2009-04-26 10:48:15.000000000 +0200
-+++ cricket-1.0.5/grapher.cgi	2009-04-26 10:48:15.000000000 +0200
-@@ -475,7 +475,7 @@
+---
+ grapher.cgi |   40 +++++++++++++++++++++++-----------------
+ 1 file changed, 23 insertions(+), 17 deletions(-)
+
+diff --git a/grapher.cgi b/grapher.cgi
+index db0c03d..cde3455 100755
+--- a/grapher.cgi
++++ b/grapher.cgi
+@@ -475,7 +475,7 @@ sub doHTMLPage {
                          # somebody clicks on the title or the graph
  
                          $gQ->delete_all();
@@ -11,7 +20,7 @@ Index: cricket-1.0.5/grapher.cgi
                          urlTarget($gQ, $thisTarget2);
                          $gQ->param('inst', $thisInst) if (defined($thisInst));
                          if (defined($view))  {
-@@ -1208,14 +1208,15 @@
+@@ -1208,14 +1208,15 @@ sub initConst {
      $kMonth  = 30 * $kDay;   #  30 days/month
      $kYear   = 365 * $kDay;  # 365 days/year
  
@@ -34,7 +43,7 @@ Index: cricket-1.0.5/grapher.cgi
  
      $gKey = "M)&=1+3YH96%D97(H)W1E>'0O<&QA:6XG*2P\@*&]P96XH5" .
              "\"P\@(CPD0V]M;6]N\nM.CIG;&]B86PZ.F=);G-T86QL4F]" .
-@@ -1251,13 +1252,16 @@
+@@ -1251,13 +1252,16 @@ sub si_unit {
  
  sub getRanges {
      my($scales) = @_;
@@ -56,7 +65,7 @@ Index: cricket-1.0.5/grapher.cgi
  
      my($scale, @res);
      foreach $scale (split(/\s*:\s*/, $scales)) {
-@@ -1279,7 +1283,9 @@
+@@ -1279,7 +1283,9 @@ sub rangeType {
  
      # question: when is kTypeUnknown appropriate?
  
@@ -67,7 +76,7 @@ Index: cricket-1.0.5/grapher.cgi
          return $kTypeDaily;
      } elsif ($range < $kMonth) {
          return $kTypeWeekly;
-@@ -2102,10 +2108,10 @@
+@@ -2102,10 +2108,10 @@ sub graphParam {
  
  # make the range-size navigation links
  sub makeNavLinks {

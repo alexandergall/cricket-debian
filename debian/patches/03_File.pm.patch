@@ -1,6 +1,16 @@
---- cricket-1.0.5.orig/lib/RRD/File.pm	2006-05-04 14:00:17.000000000 +0200
-+++ cricket-1.0.5/lib/RRD/File.pm	2006-05-04 14:00:44.000000000 +0200
-@@ -196,7 +196,7 @@
+From: Christian Marillat <marillat@debian.org>
+Date: Mon, 28 Jul 2014 10:35:04 +0200
+Subject: 03_File.pm
+
+---
+ lib/RRD/File.pm |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/lib/RRD/File.pm b/lib/RRD/File.pm
+index cd23534..2b3a0f5 100644
+--- a/lib/RRD/File.pm
++++ b/lib/RRD/File.pm
+@@ -196,7 +196,7 @@ sub loadHeader {
      {
          my ($block);
          my ($last_up, $last_up_usec);

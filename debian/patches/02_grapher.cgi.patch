@@ -1,6 +1,16 @@
---- cricket-1.0.5.orig/grapher.cgi	2006-05-04 13:54:31.000000000 +0200
-+++ cricket-1.0.5/grapher.cgi	2006-05-04 13:56:43.000000000 +0200
-@@ -23,19 +23,7 @@
+From: Christian Marillat <marillat@debian.org>
+Date: Mon, 28 Jul 2014 10:35:04 +0200
+Subject: 02_grapher.cgi
+
+---
+ grapher.cgi |   26 +++++++++-----------------
+ 1 file changed, 9 insertions(+), 17 deletions(-)
+
+diff --git a/grapher.cgi b/grapher.cgi
+index 193a9d1..db0c03d 100755
+--- a/grapher.cgi
++++ b/grapher.cgi
+@@ -23,19 +23,7 @@ BEGIN {
      # If you need to change anything in this script, it should only
      # be here, in this BEGIN block. See the README for more info.
  
@@ -21,7 +31,7 @@
      $Common::global::isGrapher = 1;
  }
  
-@@ -230,8 +218,9 @@
+@@ -230,8 +218,9 @@ sub doHTMLPage {
  
              # put the view into the target dict, so it's
              # there if they want to use it.
@@ -32,7 +42,7 @@
                  $targRef->{'auto-view'} = $view;
              }
  
-@@ -554,6 +543,8 @@
+@@ -554,6 +543,8 @@ sub doHTMLPage {
                      my($bv) = ($ENV{'HTTP_USER_AGENT'} =~ /\/(\d)/);
                      if (defined($bv) && $bv <= 3) {
                          $defFmt = 'gif';
@@ -41,7 +51,7 @@
                      }
  
                      my($format) = graphParam($gRef, 'graph-format', $defFmt);
-@@ -1490,6 +1481,7 @@
+@@ -1490,6 +1481,7 @@ sub doGraph {
          # things we pick up form the target dict
          my($rrd) = $targRef->{'rrd-datafile'};
          $lasttime = scalar(localtime(RRDs::last($rrd)));
@@ -49,7 +59,7 @@
  
          # use the dslist to create a set of defs/cdefs
  
-@@ -1601,8 +1593,8 @@
+@@ -1601,8 +1593,8 @@ sub doGraph {
              }
  
              # push NaN bars on first in background
@@ -60,7 +70,7 @@
  
              my($dsidx) = $dsnamemap{$ds};
              if (defined($dsidx)) {
-@@ -1957,7 +1949,7 @@
+@@ -1957,7 +1949,7 @@ sub sprayPic {
      my($picData) = suckPic($pic);
  
      if (! defined($picData)) {

@@ -1,7 +1,100 @@
-Index: cricket-1.0.5/doc/index.html
+From: Christian Marillat <marillat@debian.org>
+Date: Mon, 28 Jul 2014 10:35:04 +0200
+Subject: 01_debian-patch
+
 ===================================================================
---- cricket-1.0.5.orig/doc/index.html	2011-08-23 15:14:00.409899435 +0200
-+++ cricket-1.0.5/doc/index.html	2011-12-07 11:47:42.399453510 +0100
+---
+ collector                               |   11 +++--------
+ collector_th                            |    6 +-----
+ compile                                 |    6 +-----
+ doc/index.html                          |    7 +++++++
+ lib/ConfigTree/Cache.pm                 |   10 ++++++++--
+ lib/ConfigTree/Node.pm                  |   28 +++++++++++++++++++++++++---
+ lib/snmp.pm                             |    3 ++-
+ mini-graph.cgi                          |   11 +++++------
+ sample-config/Defaults                  |    7 ++++---
+ sample-config/atm-interfaces/Defaults   |    2 +-
+ sample-config/http-performance/Defaults |    2 +-
+ sample-config/news-server/Defaults      |    2 +-
+ sample-config/portmasters/Defaults      |    2 +-
+ sample-config/subtree-times/Defaults    |    2 +-
+ sample-config/usr/Defaults              |    2 +-
+ subtree-sets                            |    8 --------
+ util/LeanODBC/test.pl                   |    2 +-
+ util/dump-targets                       |    6 +-----
+ util/generate-statics                   |    6 +-----
+ util/get-collector-stats                |   14 +++++---------
+ util/listInterfaces                     |    6 +-----
+ util/rrd-tune                           |    6 +-----
+ 22 files changed, 72 insertions(+), 77 deletions(-)
+
+diff --git a/collector b/collector
+index 59d6171..abeca31 100755
+--- a/collector
++++ b/collector
+@@ -20,11 +20,7 @@
+ #    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ 
+ BEGIN {
+-    my $programdir = (($0 =~ m:^(.*/):)[0] || "./") . ".";
+-    eval "require '$programdir/cricket-conf.pl'";
+-    eval "require '/usr/local/etc/cricket-conf.pl'"
+-        unless $Common::global::gInstallRoot;
+-    $Common::global::gInstallRoot ||= $programdir;
++    require '/etc/cricket/cricket-conf.pl';
+ }
+ 
+ use lib "$Common::global::gInstallRoot/lib";
+@@ -81,9 +77,8 @@ my($recomp, $why) = $gCT->needsRecompile();
+ if ($recomp) {
+     Warn("Config tree needs to be recompiled: $why");
+ 
+-    system( (Common::Util::isWin32() ? 'perl ' : '') .
+-            "$Common::global::gInstallRoot/compile " .
+-            "-base $Common::global::gConfigRoot");
++    system("/usr/bin/cricket-compile " .
++           "-base $Common::global::gConfigRoot");
+ 
+     $gCT = new ConfigTree::Cache;
+     $gCT->Base($Common::global::gConfigRoot);
+diff --git a/collector_th b/collector_th
+index 8f8f63d..1ff4c63 100755
+--- a/collector_th
++++ b/collector_th
+@@ -20,11 +20,7 @@
+ #		Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ 
+ BEGIN {
+-	my $programdir = (($0 =~ m:^(.*/):)[0] || "./") . ".";
+-	eval "require '$programdir/cricket-conf.pl'";
+-	#eval "require '/usr/local/etc/cricket-conf.pl'"
+-	#	unless $Common::global::gInstallRoot;
+-	$Common::global::gInstallRoot ||= $programdir;
++    require '/etc/cricket/cricket-conf.pl';
+ }
+ 
+ 
+diff --git a/compile b/compile
+index 1d10365..efb61b5 100755
+--- a/compile
++++ b/compile
+@@ -20,11 +20,7 @@
+ #    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ 
+ BEGIN {
+-	my $programdir = (($0 =~ m:^(.*/):)[0] || "./") . ".";
+-	eval "require '$programdir/cricket-conf.pl'";
+-	eval "require '/usr/local/etc/cricket-conf.pl'"
+-					unless $Common::global::gInstallRoot;
+-	$Common::global::gInstallRoot ||= $programdir;
++  require '/etc/cricket/cricket-conf.pl';
+ }
+ 
+ use lib "$Common::global::gInstallRoot/lib";
+diff --git a/doc/index.html b/doc/index.html
+index 657e3d0..e954c71 100644
+--- a/doc/index.html
++++ b/doc/index.html
 @@ -7,6 +7,13 @@
    <body>
      <h1> Cricket Documentation </h1>
@@ -16,25 +109,11 @@ Index: cricket-1.0.5/doc/index.html
        <li>
          <a href="beginner.html">Installing Cricket for
          the Complete Beginner</a>
-Index: cricket-1.0.5/lib/snmp.pm
-===================================================================
---- cricket-1.0.5.orig/lib/snmp.pm	2011-08-23 15:14:00.461897330 +0200
-+++ cricket-1.0.5/lib/snmp.pm	2011-12-07 11:47:42.407453773 +0100
-@@ -79,7 +79,8 @@
-         my(@oidsToQuery) = ();
- 
-         if ($#{ $snmpDSRef } >= 0) {
--            my(@oidsToQuery) = my(@indices) = ();
-+            my(@oidsToQuery) = ();
-+            my(@indices) = ();
-             my($line);
-             while ($line = shift @{ $snmpDSRef }) {
-                 my($index, $oid) = split(/:/, $line);
-Index: cricket-1.0.5/lib/ConfigTree/Cache.pm
-===================================================================
---- cricket-1.0.5.orig/lib/ConfigTree/Cache.pm	2011-08-23 15:14:00.493896035 +0200
-+++ cricket-1.0.5/lib/ConfigTree/Cache.pm	2011-12-07 11:47:42.407453773 +0100
-@@ -145,7 +145,10 @@
+diff --git a/lib/ConfigTree/Cache.pm b/lib/ConfigTree/Cache.pm
+index eb12e2f..3e231ea 100644
+--- a/lib/ConfigTree/Cache.pm
++++ b/lib/ConfigTree/Cache.pm
+@@ -145,7 +145,10 @@ sub configHash {
          $tags = '' unless defined($tags);
  
          foreach $tag (split(/,/, $tags)) {
@@ -46,7 +125,7 @@ Index: cricket-1.0.5/lib/ConfigTree/Cache.pm
          }
  
          # ...and try once for $name
-@@ -153,7 +156,10 @@
+@@ -153,7 +156,10 @@ sub configHash {
          $tags = '' unless defined($tags);
  
          foreach $tag (split(/,/, $tags)) {
@@ -58,11 +137,11 @@ Index: cricket-1.0.5/lib/ConfigTree/Cache.pm
          }
      }
  
-Index: cricket-1.0.5/lib/ConfigTree/Node.pm
-===================================================================
---- cricket-1.0.5.orig/lib/ConfigTree/Node.pm	2011-08-23 15:14:00.477896684 +0200
-+++ cricket-1.0.5/lib/ConfigTree/Node.pm	2011-12-07 11:48:55.313863389 +0100
-@@ -168,9 +168,24 @@
+diff --git a/lib/ConfigTree/Node.pm b/lib/ConfigTree/Node.pm
+index fca915b..c6854d7 100644
+--- a/lib/ConfigTree/Node.pm
++++ b/lib/ConfigTree/Node.pm
+@@ -168,9 +168,24 @@ sub compile {
      my($file) = "$base/config.db.new";
      my($finalFile) = "$base/config.db";
      my($errorLevel);
@@ -89,7 +168,7 @@ Index: cricket-1.0.5/lib/ConfigTree/Node.pm
  
      my(%db);
      my($dbh) = tie %db, 'DB_File', $file, O_CREAT|O_RDWR, 0644, $DB_BTREE;
-@@ -190,8 +205,14 @@
+@@ -190,8 +205,14 @@ sub compile {
      undef $dbh;
      untie %db;
  
@@ -105,7 +184,7 @@ Index: cricket-1.0.5/lib/ConfigTree/Node.pm
      if ($errorLevel) {
          Common::Log::Error("config.db.new could not be renamed to config.db!");
          Common::Log::Error("Reason is: $errorLevel");
-@@ -584,6 +605,7 @@
+@@ -584,6 +605,7 @@ sub skipFile {
      $res = 1 if ($file =~ /\.dpkg-/);
      $res = 1 if ($file =~ /^\./);
      $res = 1 if ($file =~ /\/CVS$/);
@@ -113,74 +192,25 @@ Index: cricket-1.0.5/lib/ConfigTree/Node.pm
  
      return $res;
  }
-Index: cricket-1.0.5/collector
-===================================================================
---- cricket-1.0.5.orig/collector	2011-08-23 15:14:00.425898788 +0200
-+++ cricket-1.0.5/collector	2011-12-07 11:47:42.407453773 +0100
-@@ -20,11 +20,7 @@
- #    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+diff --git a/lib/snmp.pm b/lib/snmp.pm
+index ee3eceb..b8607d6 100644
+--- a/lib/snmp.pm
++++ b/lib/snmp.pm
+@@ -79,7 +79,8 @@ sub snmpFetch {
+         my(@oidsToQuery) = ();
  
- BEGIN {
--    my $programdir = (($0 =~ m:^(.*/):)[0] || "./") . ".";
--    eval "require '$programdir/cricket-conf.pl'";
--    eval "require '/usr/local/etc/cricket-conf.pl'"
--        unless $Common::global::gInstallRoot;
--    $Common::global::gInstallRoot ||= $programdir;
-+    require '/etc/cricket/cricket-conf.pl';
- }
- 
- use lib "$Common::global::gInstallRoot/lib";
-@@ -81,9 +77,8 @@
- if ($recomp) {
-     Warn("Config tree needs to be recompiled: $why");
- 
--    system( (Common::Util::isWin32() ? 'perl ' : '') .
--            "$Common::global::gInstallRoot/compile " .
--            "-base $Common::global::gConfigRoot");
-+    system("/usr/bin/cricket-compile " .
-+           "-base $Common::global::gConfigRoot");
- 
-     $gCT = new ConfigTree::Cache;
-     $gCT->Base($Common::global::gConfigRoot);
-Index: cricket-1.0.5/collector_th
-===================================================================
---- cricket-1.0.5.orig/collector_th	2011-08-23 15:14:00.453897655 +0200
-+++ cricket-1.0.5/collector_th	2011-12-07 11:47:42.407453773 +0100
-@@ -20,11 +20,7 @@
- #		Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- 
- BEGIN {
--	my $programdir = (($0 =~ m:^(.*/):)[0] || "./") . ".";
--	eval "require '$programdir/cricket-conf.pl'";
--	#eval "require '/usr/local/etc/cricket-conf.pl'"
--	#	unless $Common::global::gInstallRoot;
--	$Common::global::gInstallRoot ||= $programdir;
-+    require '/etc/cricket/cricket-conf.pl';
- }
- 
- 
-Index: cricket-1.0.5/compile
-===================================================================
---- cricket-1.0.5.orig/compile	2011-08-23 15:14:00.625890695 +0200
-+++ cricket-1.0.5/compile	2011-12-07 11:47:42.407453773 +0100
-@@ -20,11 +20,7 @@
- #    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- 
- BEGIN {
--	my $programdir = (($0 =~ m:^(.*/):)[0] || "./") . ".";
--	eval "require '$programdir/cricket-conf.pl'";
--	eval "require '/usr/local/etc/cricket-conf.pl'"
--					unless $Common::global::gInstallRoot;
--	$Common::global::gInstallRoot ||= $programdir;
-+  require '/etc/cricket/cricket-conf.pl';
- }
- 
- use lib "$Common::global::gInstallRoot/lib";
-Index: cricket-1.0.5/mini-graph.cgi
-===================================================================
---- cricket-1.0.5.orig/mini-graph.cgi	2011-08-23 15:14:00.437898302 +0200
-+++ cricket-1.0.5/mini-graph.cgi	2011-12-07 11:47:42.407453773 +0100
-@@ -23,11 +23,10 @@
+         if ($#{ $snmpDSRef } >= 0) {
+-            my(@oidsToQuery) = my(@indices) = ();
++            my(@oidsToQuery) = ();
++            my(@indices) = ();
+             my($line);
+             while ($line = shift @{ $snmpDSRef }) {
+                 my($index, $oid) = split(/:/, $line);
+diff --git a/mini-graph.cgi b/mini-graph.cgi
+index d3da85d..2ac0183 100755
+--- a/mini-graph.cgi
++++ b/mini-graph.cgi
+@@ -23,11 +23,10 @@ BEGIN {
      # This magic attempts to guess the install directory based
      # on how the script was called. If it fails for you, just
      # hardcode it.
@@ -196,7 +226,7 @@ Index: cricket-1.0.5/mini-graph.cgi
  }
  
  use lib "$Common::global::gInstallRoot/lib";
-@@ -106,7 +105,7 @@
+@@ -106,7 +105,7 @@ sub sprayPng {
  
      if (! tryPng($png)) {
          Warn("Could not open $png: $!");
@@ -205,10 +235,127 @@ Index: cricket-1.0.5/mini-graph.cgi
              Warn("Could not send failure png: $!");
              return;
          }
-Index: cricket-1.0.5/subtree-sets
-===================================================================
---- cricket-1.0.5.orig/subtree-sets	2011-08-23 15:14:00.637890208 +0200
-+++ cricket-1.0.5/subtree-sets	2011-12-07 11:47:42.411453905 +0100
+diff --git a/sample-config/Defaults b/sample-config/Defaults
+index 12888b6..39f74f1 100644
+--- a/sample-config/Defaults
++++ b/sample-config/Defaults
+@@ -3,7 +3,7 @@
+ #
+ 
+ Target    --default--
+-    dataDir             = %auto-base%/../cricket-data/%auto-target-path%
++    dataDir		= /var/lib/cricket/%auto-target-path%
+     email-program       = /usr/bin/mailx
+     rrd-datafile        = %dataDir%/%auto-target-name%.rrd
+     rrd-poll-interval   = 300
+@@ -125,7 +125,7 @@ html     page-footer
+     <table width=100% cellpadding=3>
+         <tr>
+         <td>
+-            <a href="http://cricket.sourceforge.net/"><img align=left width=58 height=55 src="images/cricket-sm.gif" border=0></a>
++            <a href="http://cricket.sourceforge.net/"><img align=left width=58 height=55 src="/cricket/images/cricket-sm.gif" border=0></a>
+         </td>
+         <td width=15% valign=center>
+             <p align=left><font size=+2>
+@@ -137,7 +137,7 @@ html     page-footer
+         </td>
+         <td width=120 valign=center>
+             <center>
+-            <a href="http://ee-staff.ethz.ch/~oetiker/webtools/rrdtool"><img width=120 height=34 src="images/rrdtool.gif" border=0></a>
++            <a href="http://ee-staff.ethz.ch/~oetiker/webtools/rrdtool"><img width=120 height=34 src="/cricket/images/rrdtool.gif" border=0></a>
+         </td>
+         </tr>
+     </table>
+@@ -174,6 +174,7 @@ color   skyblue         0080FF
+ color   orange          FF8000
+ color   burntorng       800000
+ color   purply          FB31FB
++color   white           ffffff
+ 
+ # this tells the grapher which colors to choose first, if
+ # it was not given colors
+diff --git a/sample-config/atm-interfaces/Defaults b/sample-config/atm-interfaces/Defaults
+index 997cbde..f884827 100644
+--- a/sample-config/atm-interfaces/Defaults
++++ b/sample-config/atm-interfaces/Defaults
+@@ -6,7 +6,7 @@
+ target --default--
+     short-desc  =   "%swname%:  %interface-desc%"
+     long-desc   =   %interface-desc%
+-    util-dir    =   %auto-base%/../cricket/util
++    util-dir    =   /usr/share/cricket/util
+     inst        =   %InterfaceID%
+     snmp-community  =   public
+     snmp-host   =   %swname%
+diff --git a/sample-config/http-performance/Defaults b/sample-config/http-performance/Defaults
+index 0898149..0de684c 100644
+--- a/sample-config/http-performance/Defaults
++++ b/sample-config/http-performance/Defaults
+@@ -4,7 +4,7 @@ target --default--
+                      <a href=\"%url%\">%url%</a>."
+     # you'll probably want to change this... unless you
+     # have Cricket in ~/cricket and your config tree in ~/cricket-config
+-    util-dir    =   %auto-base%/../cricket/util
++    util-dir    =   /usr/share/cricket/util
+     target-type =   http-performance
+     url         =   ""
+ 
+diff --git a/sample-config/news-server/Defaults b/sample-config/news-server/Defaults
+index aa51e74..cd91be7 100644
+--- a/sample-config/news-server/Defaults
++++ b/sample-config/news-server/Defaults
+@@ -10,7 +10,7 @@
+ target --default--
+     # you'll probably want to change this... unless you
+     # have Cricket in ~/cricket and your config tree in ~/config
+-    util-dir    =   %auto-base%/../cricket/util
++    util-dir    =   /usr/share/cricket/util
+     remexec     =   "/usr/local/net/bin/ssh -l %user% %server%"
+     user        =   news
+     server      =   nntp-host
+diff --git a/sample-config/portmasters/Defaults b/sample-config/portmasters/Defaults
+index 411bfea..98eafbb 100644
+--- a/sample-config/portmasters/Defaults
++++ b/sample-config/portmasters/Defaults
+@@ -9,7 +9,7 @@ Target  --default--
+     # fill in your domain name here
+     domain           = ""
+     snmp-host        = %portmaster%.%domain%
+-    pm3lineUsage     = "%auto-base%/../cricket/util/pmlines.pl"
++    pm3lineUsage     = "/usr/share/cricket/util/pmlines.pl"
+     pm3lines         = "%pm3lineUsage% %snmp-community%@%snmp-host%"
+     # you could set a router-specific community string here:
+     # snmp-community   = not-public
+diff --git a/sample-config/subtree-times/Defaults b/sample-config/subtree-times/Defaults
+index 72bd9c3..6f79c59 100644
+--- a/sample-config/subtree-times/Defaults
++++ b/sample-config/subtree-times/Defaults
+@@ -14,7 +14,7 @@ Target      --default--
+     directory-desc      = "Just how long is the collector taking?"
+     disable-short-desc  = true
+     long-desc           = "%auto-target-name% collector information"
+-    bindir              = %auto-base%/../cricket/util
++    bindir              = /usr/share/cricket/util
+ 
+ datasource  --default--
+     rrd-ds-type     =   GAUGE
+diff --git a/sample-config/usr/Defaults b/sample-config/usr/Defaults
+index f967908..971ed4d 100644
+--- a/sample-config/usr/Defaults
++++ b/sample-config/usr/Defaults
+@@ -9,7 +9,7 @@ target --default--
+     domain      =   yournetwork.net
+     # you'll probably want to change this... unless you
+     # have Cricket in ~/cricket and your config tree in ~/config
+-    util-dir    =   %auto-base%/../cricket/util
++    util-dir    =   /usr/share/cricket/util
+     #snmp-community =   private
+     snmp-host   =   "%modem%.%domain%"
+     usrGetUsage =   "%auto-base%/../cricket/util/usrModemUsage"
+diff --git a/subtree-sets b/subtree-sets
+index 128c0d2..65d55a0 100644
+--- a/subtree-sets
++++ b/subtree-sets
 @@ -1,14 +1,6 @@
  # This file lists the subtrees that will be processed together in one
  # set. See the comments at the beginning of collect-subtrees for more info.
@@ -224,141 +371,24 @@ Index: cricket-1.0.5/subtree-sets
  set normal:
  	/routers
  	/router-interfaces
-Index: cricket-1.0.5/sample-config/atm-interfaces/Defaults
-===================================================================
---- cricket-1.0.5.orig/sample-config/atm-interfaces/Defaults	2011-08-23 15:14:00.529894580 +0200
-+++ cricket-1.0.5/sample-config/atm-interfaces/Defaults	2011-12-07 11:47:42.411453905 +0100
-@@ -6,7 +6,7 @@
- target --default--
-     short-desc  =   "%swname%:  %interface-desc%"
-     long-desc   =   %interface-desc%
--    util-dir    =   %auto-base%/../cricket/util
-+    util-dir    =   /usr/share/cricket/util
-     inst        =   %InterfaceID%
-     snmp-community  =   public
-     snmp-host   =   %swname%
-Index: cricket-1.0.5/sample-config/Defaults
-===================================================================
---- cricket-1.0.5.orig/sample-config/Defaults	2011-08-23 15:14:00.541894094 +0200
-+++ cricket-1.0.5/sample-config/Defaults	2011-12-07 11:48:39.817351323 +0100
-@@ -3,7 +3,7 @@
- #
- 
- Target    --default--
--    dataDir             = %auto-base%/../cricket-data/%auto-target-path%
-+    dataDir		= /var/lib/cricket/%auto-target-path%
-     email-program       = /usr/bin/mailx
-     rrd-datafile        = %dataDir%/%auto-target-name%.rrd
-     rrd-poll-interval   = 300
-@@ -125,7 +125,7 @@
-     <table width=100% cellpadding=3>
-         <tr>
-         <td>
--            <a href="http://cricket.sourceforge.net/"><img align=left width=58 height=55 src="images/cricket-sm.gif" border=0></a>
-+            <a href="http://cricket.sourceforge.net/"><img align=left width=58 height=55 src="/cricket/images/cricket-sm.gif" border=0></a>
-         </td>
-         <td width=15% valign=center>
-             <p align=left><font size=+2>
-@@ -137,7 +137,7 @@
-         </td>
-         <td width=120 valign=center>
-             <center>
--            <a href="http://ee-staff.ethz.ch/~oetiker/webtools/rrdtool"><img width=120 height=34 src="images/rrdtool.gif" border=0></a>
-+            <a href="http://ee-staff.ethz.ch/~oetiker/webtools/rrdtool"><img width=120 height=34 src="/cricket/images/rrdtool.gif" border=0></a>
-         </td>
-         </tr>
-     </table>
-@@ -174,6 +174,7 @@
- color   orange          FF8000
- color   burntorng       800000
- color   purply          FB31FB
-+color   white           ffffff
- 
- # this tells the grapher which colors to choose first, if
- # it was not given colors
-Index: cricket-1.0.5/sample-config/http-performance/Defaults
-===================================================================
---- cricket-1.0.5.orig/sample-config/http-performance/Defaults	2011-08-23 15:14:00.609891341 +0200
-+++ cricket-1.0.5/sample-config/http-performance/Defaults	2011-12-07 11:47:42.411453905 +0100
-@@ -4,7 +4,7 @@
-                      <a href=\"%url%\">%url%</a>."
-     # you'll probably want to change this... unless you
-     # have Cricket in ~/cricket and your config tree in ~/cricket-config
--    util-dir    =   %auto-base%/../cricket/util
-+    util-dir    =   /usr/share/cricket/util
-     target-type =   http-performance
-     url         =   ""
- 
-Index: cricket-1.0.5/sample-config/news-server/Defaults
-===================================================================
---- cricket-1.0.5.orig/sample-config/news-server/Defaults	2011-08-23 15:14:00.513895227 +0200
-+++ cricket-1.0.5/sample-config/news-server/Defaults	2011-12-07 11:47:42.411453905 +0100
-@@ -10,7 +10,7 @@
- target --default--
-     # you'll probably want to change this... unless you
-     # have Cricket in ~/cricket and your config tree in ~/config
--    util-dir    =   %auto-base%/../cricket/util
-+    util-dir    =   /usr/share/cricket/util
-     remexec     =   "/usr/local/net/bin/ssh -l %user% %server%"
-     user        =   news
-     server      =   nntp-host
-Index: cricket-1.0.5/sample-config/portmasters/Defaults
-===================================================================
---- cricket-1.0.5.orig/sample-config/portmasters/Defaults	2011-08-23 15:14:00.573892799 +0200
-+++ cricket-1.0.5/sample-config/portmasters/Defaults	2011-12-07 11:47:42.411453905 +0100
-@@ -9,7 +9,7 @@
-     # fill in your domain name here
-     domain           = ""
-     snmp-host        = %portmaster%.%domain%
--    pm3lineUsage     = "%auto-base%/../cricket/util/pmlines.pl"
-+    pm3lineUsage     = "/usr/share/cricket/util/pmlines.pl"
-     pm3lines         = "%pm3lineUsage% %snmp-community%@%snmp-host%"
-     # you could set a router-specific community string here:
-     # snmp-community   = not-public
-Index: cricket-1.0.5/sample-config/subtree-times/Defaults
-===================================================================
---- cricket-1.0.5.orig/sample-config/subtree-times/Defaults	2011-08-23 15:14:00.593891990 +0200
-+++ cricket-1.0.5/sample-config/subtree-times/Defaults	2011-12-07 11:47:42.411453905 +0100
-@@ -14,7 +14,7 @@
-     directory-desc      = "Just how long is the collector taking?"
-     disable-short-desc  = true
-     long-desc           = "%auto-target-name% collector information"
--    bindir              = %auto-base%/../cricket/util
-+    bindir              = /usr/share/cricket/util
- 
- datasource  --default--
-     rrd-ds-type     =   GAUGE
-Index: cricket-1.0.5/sample-config/usr/Defaults
-===================================================================
---- cricket-1.0.5.orig/sample-config/usr/Defaults	2011-08-23 15:14:00.561893285 +0200
-+++ cricket-1.0.5/sample-config/usr/Defaults	2011-12-07 11:47:42.411453905 +0100
-@@ -9,7 +9,7 @@
-     domain      =   yournetwork.net
-     # you'll probably want to change this... unless you
-     # have Cricket in ~/cricket and your config tree in ~/config
--    util-dir    =   %auto-base%/../cricket/util
-+    util-dir    =   /usr/share/cricket/util
-     #snmp-community =   private
-     snmp-host   =   "%modem%.%domain%"
-     usrGetUsage =   "%auto-base%/../cricket/util/usrModemUsage"
-Index: cricket-1.0.5/util/LeanODBC/test.pl
-===================================================================
---- cricket-1.0.5.orig/util/LeanODBC/test.pl	2011-08-23 15:14:00.665889075 +0200
-+++ cricket-1.0.5/util/LeanODBC/test.pl	2011-12-07 11:47:42.411453905 +0100
+diff --git a/util/LeanODBC/test.pl b/util/LeanODBC/test.pl
+index d32f339..e42ffcd 100755
+--- a/util/LeanODBC/test.pl
++++ b/util/LeanODBC/test.pl
 @@ -1,3 +1,4 @@
 +#!/usr/bin/perl
  # Before `make install' is performed this script should be runnable with
  # `make test'. After `make install' it should work as `perl test.pl'
  
-@@ -74,4 +75,3 @@
+@@ -74,4 +75,3 @@ print (($ret[0] == SQL_SUCCESS) ? "ok 13\n" : "not ok 13\n");
  print (($ret[0] == SQL_SUCCESS) ? "ok 14\n" : "not ok 14\n");
  @ret = SQLFreeHandle(SQL_HANDLE_ENV,$henv);
  print (($ret[0] == SQL_SUCCESS) ? "ok 15\n" : "not ok 15\n");
 -
-Index: cricket-1.0.5/util/dump-targets
-===================================================================
---- cricket-1.0.5.orig/util/dump-targets	2011-08-23 15:14:00.653889562 +0200
-+++ cricket-1.0.5/util/dump-targets	2011-12-07 11:47:42.411453905 +0100
+diff --git a/util/dump-targets b/util/dump-targets
+index 71fb694..faed08a 100755
+--- a/util/dump-targets
++++ b/util/dump-targets
 @@ -20,11 +20,7 @@
  #    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  
@@ -372,10 +402,10 @@ Index: cricket-1.0.5/util/dump-targets
  }
  
  use lib "$Common::global::gInstallRoot/lib";
-Index: cricket-1.0.5/util/generate-statics
-===================================================================
---- cricket-1.0.5.orig/util/generate-statics	2011-08-23 15:14:00.693887942 +0200
-+++ cricket-1.0.5/util/generate-statics	2011-12-07 11:47:42.411453905 +0100
+diff --git a/util/generate-statics b/util/generate-statics
+index babf438..47cced0 100755
+--- a/util/generate-statics
++++ b/util/generate-statics
 @@ -20,11 +20,7 @@
  #    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  
@@ -389,10 +419,10 @@ Index: cricket-1.0.5/util/generate-statics
  }
  
  use lib "$Common::global::gInstallRoot/lib";
-Index: cricket-1.0.5/util/get-collector-stats
-===================================================================
---- cricket-1.0.5.orig/util/get-collector-stats	2011-08-23 15:14:00.725886647 +0200
-+++ cricket-1.0.5/util/get-collector-stats	2011-12-07 11:47:42.411453905 +0100
+diff --git a/util/get-collector-stats b/util/get-collector-stats
+index 1443947..4e2cd92 100755
+--- a/util/get-collector-stats
++++ b/util/get-collector-stats
 @@ -20,11 +20,7 @@
  #    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  
@@ -406,7 +436,7 @@ Index: cricket-1.0.5/util/get-collector-stats
  }
  
  use strict;
-@@ -41,12 +37,12 @@
+@@ -41,12 +37,12 @@ my $tnum    = 0;
  my $when    = 0;
  my $now		= time();
  
@@ -423,10 +453,10 @@ Index: cricket-1.0.5/util/get-collector-stats
  }
  
  if ($output[0] =~ /\[(.*?)\]\s+Processed\s+([0-9]+)\s+targets\s+in\s+(.*)\.$/) {
-Index: cricket-1.0.5/util/listInterfaces
-===================================================================
---- cricket-1.0.5.orig/util/listInterfaces	2011-08-23 15:14:00.681888429 +0200
-+++ cricket-1.0.5/util/listInterfaces	2011-12-07 11:47:42.411453905 +0100
+diff --git a/util/listInterfaces b/util/listInterfaces
+index 7dc3ab9..50b4a4a 100755
+--- a/util/listInterfaces
++++ b/util/listInterfaces
 @@ -20,11 +20,7 @@
  #    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  
@@ -440,10 +470,10 @@ Index: cricket-1.0.5/util/listInterfaces
  }
  
  use lib "$Common::global::gInstallRoot/lib";
-Index: cricket-1.0.5/util/rrd-tune
-===================================================================
---- cricket-1.0.5.orig/util/rrd-tune	2011-08-23 15:14:00.709887296 +0200
-+++ cricket-1.0.5/util/rrd-tune	2011-12-07 11:47:42.415454037 +0100
+diff --git a/util/rrd-tune b/util/rrd-tune
+index 883b34e..2dbc2f4 100755
+--- a/util/rrd-tune
++++ b/util/rrd-tune
 @@ -20,11 +20,7 @@
  #    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  
