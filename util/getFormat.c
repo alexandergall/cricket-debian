@@ -22,7 +22,9 @@
 #include <time.h>
 #include <ctype.h>
 
-#include <rrd_format.h>
+#define RRD_EXPORT_DEPRECATED
+
+#include <rrd.h>
 
 void format_stat_head (void) {
   stat_head_t h1;
@@ -102,7 +104,7 @@ void format_stat_head (void) {
   pad = sizeof(h1) - total;
 
   sprintf(rrdFormat, "%s x%d", rrdFormat, pad);
-  printf("$self->{'statHead'} = \"%s\"\n", rrdFormat);
+  printf("$self->{'statHead'} = \"%s\";\n", rrdFormat);
 }
 
 void format_ds_def (void) {
@@ -153,7 +155,7 @@ void format_ds_def (void) {
 	  sprintf(rrdFormat, "%s x%d", rrdFormat, pad);
   }
 
-  printf("$self->{'dsDef'} = \"%s\"\n", rrdFormat);
+  printf("$self->{'dsDef'} = \"%s\";\n", rrdFormat);
 }
 
 void format_rra_def   (void) {
@@ -209,7 +211,7 @@ void format_rra_def   (void) {
 	  sprintf(rrdFormat, "%s x%d", rrdFormat, pad);
   }
 
-  printf("$self->{'rraDef'} = \"%s\"\n", rrdFormat);
+  printf("$self->{'rraDef'} = \"%s\";\n", rrdFormat);
 }
 
 void format_live_head (void) {
@@ -218,7 +220,7 @@ void format_live_head (void) {
   memset(rrdFormat, 0, sizeof(rrdFormat));
 
   sprintf(rrdFormat, "%c", (sizeof(time_t)==8)?'Q':'L');
-  printf("$self->{'liveHead'} = \"%s\"\n", rrdFormat);
+  printf("$self->{'liveHead'} = \"%s\";\n", rrdFormat);
 }
 
 void format_pdp_prep  (void) {
@@ -259,7 +261,7 @@ void format_pdp_prep  (void) {
 	  sprintf(rrdFormat, "%s x%d", rrdFormat, pad);
   }
 
-  printf("$self->{'pdpDef'} = \"%s\"\n", rrdFormat);
+  printf("$self->{'pdpDef'} = \"%s\";\n", rrdFormat);
 }
 
 void format_cdp_prep  (void) {
@@ -286,7 +288,7 @@ void format_cdp_prep  (void) {
 	  sprintf(rrdFormat, "%s x%d", rrdFormat, pad);
   }
 
-  printf("$self->{'cdpDef'} = \"%s\"\n", rrdFormat);
+  printf("$self->{'cdpDef'} = \"%s\";\n", rrdFormat);
 }
 
 void format_rra_ptr   (void) {
@@ -296,7 +298,7 @@ void format_rra_ptr   (void) {
 
   sprintf(rrdFormat, "%c", (sizeof(&rrdFormat)==8)?'Q':'L');
 
-  printf("$self->{'rraPtr'} = \"%s\"\n", rrdFormat);
+  printf("$self->{'rraPtr'} = \"%s\";\n", rrdFormat);
 }
 
 void format_element   (void) {
@@ -304,7 +306,7 @@ void format_element   (void) {
 
   sprintf(rrdFormat, "d"); /* Assuming all data elements are just doubles *
 							  This is pretty safe */
-  printf("$self->{'element'} = \"%s\"\n", rrdFormat);
+  printf("$self->{'element'} = \"%s\";\n", rrdFormat);
 }
  
 int main (void) {
