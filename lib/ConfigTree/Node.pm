@@ -606,6 +606,7 @@ sub skipFile {
     $res = 1 if ($file =~ /^\./);
     $res = 1 if ($file =~ /\/CVS$/);
     $res = 1 if ($file =~ /\.dpkg-/);
+    $res = 1 if ($file =~ /\.transform/);
 
     return $res;
 }

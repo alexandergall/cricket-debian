@@ -44,6 +44,8 @@ use file;
 use field;
 eval "use sql";
 
+my %transforms;
+
 if (Common::Util::isWin32()) {
     eval "use wbem";
     eval "use perfmon";
@@ -329,7 +331,7 @@ sub retrieveData {
 
     my($ds);
     foreach $ds ( @targetDSs ) {
-        my($dataSource);
+        my($dataSource, $transform);
         if ($ds =~ /^--/) {
             # this is a hacked one, from the verify code, above.
             $dataSource = $ds;
@@ -345,6 +347,24 @@ sub retrieveData {
                    next;
                 }
                 $dataSource = $dsRef->{'ds-source'};
+                if ($dsRef->{'transform'}) {
+                    my $file = $dsRef->{'transform'};
+                    if (not exists $transforms{$file}) {
+                        Debug("Loading transform $file");
+                        $transform = do $file;
+                        if (not defined $transform) {
+                            if ($@) {
+                                Warn("Couldn't parse transform $file: $@");
+                            } else {
+                                Warn("Couldn't read transform $file: $!");
+                            }
+                            next;
+                        }
+                        $transforms{$file} = $transform;
+                    } else {
+                        $transform = $transforms{$file};
+                    }
+                }
                 $dataSource = ConfigTree::Cache::expandString($dataSource,
                                                               $target, \&Warn);
             } else {
@@ -361,7 +381,8 @@ sub retrieveData {
         # index.  This is so that we can be sure to reassemble the
         # data source return value array in the right order.
 
-        push(@{ $targetDataSources{lc($dsMethod)} }, "$dsIndex:$dsLine");
+        push(@{ $targetDataSources{lc($dsMethod)}{dsList} }, "$dsIndex:$dsLine");
+        push(@{ $targetDataSources{lc($dsMethod)}{transformList} }, $transform);
         Debug("ds$dsIndex is: $dsLine");
         $dsIndex++;
     }
@@ -369,12 +390,22 @@ sub retrieveData {
     # For each different data source type (snmp, exec, etc.)
     # call the fetcher to retrieve the data.
 
-    my($dsList, $type, @mixedResults);
-    while (($type, $dsList) = each %targetDataSources) {
+    my($tds, $type, @mixedResults);
+    while (($type, $tds) = each %targetDataSources) {
+        my $dsList = $tds->{dsList};
+        my $transformList = $tds->{transformList};
         if (defined ($main::gDSFetch{$type})) {
-            push(@mixedResults,
-                 map { $_ = $type . ":" . $_ }
-                     &{$main::gDSFetch{$type}}($dsList, $name, $target));
+            my @results = map { $_ = $type . ":" . $_ }
+            &{$main::gDSFetch{$type}}($dsList, $name, $target);
+            for (my $i = 0; $i <= $#results; $i = $i+1) {
+                if ($transformList->[$i]) {
+                    my($type, $index, $value) = split(/:/, $results[$i], 3);
+                    my $nvalue = $transformList->[$i]->($value);
+                    Debug("Applying transformation $value -> $nvalue");
+                    $results[$i] = $type.':'.$index.':'.$nvalue;
+                }
+            }
+            push(@mixedResults, @results);
         } else {
             Warn("Could not find a fetcher with type $type to " .
                  "fetch data for $tname.");
