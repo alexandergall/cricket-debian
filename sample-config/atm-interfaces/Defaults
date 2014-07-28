@@ -6,7 +6,7 @@
 target --default--
     short-desc  =   "%swname%:  %interface-desc%"
     long-desc   =   %interface-desc%
-    util-dir    =   %auto-base%/../cricket/util
+    util-dir    =   /usr/share/cricket/util
     inst        =   %InterfaceID%
     snmp-community  =   public
     snmp-host   =   %swname%

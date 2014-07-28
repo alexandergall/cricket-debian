@@ -1,3 +1,4 @@
+#!/usr/bin/perl
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl test.pl'
 
@@ -74,4 +75,3 @@ print (($ret[0] == SQL_SUCCESS) ? "ok 13\n" : "not ok 13\n");
 print (($ret[0] == SQL_SUCCESS) ? "ok 14\n" : "not ok 14\n");
 @ret = SQLFreeHandle(SQL_HANDLE_ENV,$henv);
 print (($ret[0] == SQL_SUCCESS) ? "ok 15\n" : "not ok 15\n");
-

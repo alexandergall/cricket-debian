@@ -23,11 +23,10 @@ BEGIN {
     # This magic attempts to guess the install directory based
     # on how the script was called. If it fails for you, just
     # hardcode it.
-    my $programdir = (($0 =~ m:^(.*/):)[0] || "./") . ".";
-    eval "require '$programdir/cricket-conf.pl'";
-    eval "require '/usr/local/etc/cricket-conf.pl'"
-        unless $Common::global::gInstallRoot;
-    $Common::global::gInstallRoot ||= $programdir;
+    require '/etc/cricket/cricket-conf.pl';
+
+    # Necessary for set[ug]id operation
+    $ENV{PATH} = '/bin:/usr/bin';
 }
 
 use lib "$Common::global::gInstallRoot/lib";
@@ -106,7 +105,7 @@ sub sprayPng {
 
     if (! tryPng($png)) {
         Warn("Could not open $png: $!");
-        if (! tryPng("images/failed.png")) {
+        if (! tryPng("/usr/share/cricket/images/failed.png")) {
             Warn("Could not send failure png: $!");
             return;
         }

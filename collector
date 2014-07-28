@@ -20,11 +20,7 @@
 #    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 BEGIN {
-    my $programdir = (($0 =~ m:^(.*/):)[0] || "./") . ".";
-    eval "require '$programdir/cricket-conf.pl'";
-    eval "require '/usr/local/etc/cricket-conf.pl'"
-        unless $Common::global::gInstallRoot;
-    $Common::global::gInstallRoot ||= $programdir;
+    require '/etc/cricket/cricket-conf.pl';
 }
 
 use lib "$Common::global::gInstallRoot/lib";
@@ -81,9 +77,8 @@ my($recomp, $why) = $gCT->needsRecompile();
 if ($recomp) {
     Warn("Config tree needs to be recompiled: $why");
 
-    system( (Common::Util::isWin32() ? 'perl ' : '') .
-            "$Common::global::gInstallRoot/compile " .
-            "-base $Common::global::gConfigRoot");
+    system("/usr/bin/cricket-compile " .
+           "-base $Common::global::gConfigRoot");
 
     $gCT = new ConfigTree::Cache;
     $gCT->Base($Common::global::gConfigRoot);

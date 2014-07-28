@@ -4,7 +4,7 @@ target --default--
                      <a href=\"%url%\">%url%</a>."
     # you'll probably want to change this... unless you
     # have Cricket in ~/cricket and your config tree in ~/cricket-config
-    util-dir    =   %auto-base%/../cricket/util
+    util-dir    =   /usr/share/cricket/util
     target-type =   http-performance
     url         =   ""
 

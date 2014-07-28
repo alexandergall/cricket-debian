@@ -9,7 +9,7 @@ target --default--
     domain      =   yournetwork.net
     # you'll probably want to change this... unless you
     # have Cricket in ~/cricket and your config tree in ~/config
-    util-dir    =   %auto-base%/../cricket/util
+    util-dir    =   /usr/share/cricket/util
     #snmp-community =   private
     snmp-host   =   "%modem%.%domain%"
     usrGetUsage =   "%auto-base%/../cricket/util/usrModemUsage"

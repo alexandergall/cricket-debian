@@ -20,11 +20,7 @@
 #    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 BEGIN {
-   my $programdir = (($0 =~ m:^(.*/):)[0] || "./") . "..";
-   eval "require '$programdir/cricket-conf.pl'";
-   eval "require '/usr/local/etc/cricket-conf.pl'"
-                 unless $Common::global::gInstallRoot;
-   $Common::global::gInstallRoot ||= $programdir;
+  require '/etc/cricket/cricket-conf.pl';
 }
 
 use strict;
@@ -41,12 +37,12 @@ my $tnum    = 0;
 my $when    = 0;
 my $now		= time();
 
-if (! -f "$Common::global::gCricketHome/cricket-logs/$subtree.times") {
-	die "Couldn't find $Common::global::gCricketHome/cricket-logs/$subtree.times.\n";
+if (! -f "$Common::global::gLogDir/$subtree.times") {
+	die "Couldn't find $Common::global::gLogDir/$subtree.times.\n";
 } else {
-	@output = `tail -1 $Common::global::gCricketHome/cricket-logs/$subtree.times 2>&1`;
+	@output = `tail -1 $Common::global::gLogDir/$subtree.times 2>&1`;
 	if ($?) {
-		die "Error tailing $Common::global::gCricketHome/cricket-logs/$subtree.times: $?\n"; }
+		die "Error tailing $Common::global::gLogDir/$subtree.times: $?\n"; }
 }
 
 if ($output[0] =~ /\[(.*?)\]\s+Processed\s+([0-9]+)\s+targets\s+in\s+(.*)\.$/) {

@@ -10,7 +10,7 @@
 target --default--
     # you'll probably want to change this... unless you
     # have Cricket in ~/cricket and your config tree in ~/config
-    util-dir    =   %auto-base%/../cricket/util
+    util-dir    =   /usr/share/cricket/util
     remexec     =   "/usr/local/net/bin/ssh -l %user% %server%"
     user        =   news
     server      =   nntp-host

@@ -14,7 +14,7 @@ Target      --default--
     directory-desc      = "Just how long is the collector taking?"
     disable-short-desc  = true
     long-desc           = "%auto-target-name% collector information"
-    bindir              = %auto-base%/../cricket/util
+    bindir              = /usr/share/cricket/util
 
 datasource  --default--
     rrd-ds-type     =   GAUGE

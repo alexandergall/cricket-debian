@@ -168,9 +168,24 @@ sub compile {
     my($file) = "$base/config.db.new";
     my($finalFile) = "$base/config.db";
     my($errorLevel);
+    my($file_uid,$file_gid,$file_mode);
+
+    # ideally, we shouldn't unlink($file) and then move the new
+    # one into its place with rename(): it would be better to rewrite
+    # $file in place (could be dangerous) or make the new database in
+    # a temporary place and then dump it on top of the existing one
+    # (equiv. to "cat foo > bar", preserving file ownership & mode).
+    #
+    # for now: cache the mode and ownership of $file, and do some sanity
+    # checking to make sure this routine doesn't fall over in a heap.
+    unless (-w $base) {
+    	Common::Log::Error("Don't have write permission on $base, creating a new file and fixing its permissions will be problematic at best");
+    }
+    ($file_mode,$file_uid,$file_gid) = (stat($finalFile))[2,4,5];
+
     # we are being asked to do a complete rebuild, so start
-    # from scratch
-    unlink($file);
+    # from scratch: remove the temporary config.db if it exists.
+    unlink($file) if (-e $file);
 
     my(%db);
     my($dbh) = tie %db, 'DB_File', $file, O_CREAT|O_RDWR, 0644, $DB_BTREE;
@@ -190,8 +205,14 @@ sub compile {
     undef $dbh;
     untie %db;
 
+    if (defined($file_mode) && !chmod($file_mode, $file)) {
+    	$file_mode = sprintf("%04o",$file_mode & 07777);
+    	Common::Log::Error("couldn't apply preserved file mode ($file_mode) to $file, fix manually");
+    }
+    if(defined($file_uid) && defined($file_gid) && !chown($file_uid, $file_gid, $file)) {
+    	Common::Log::Error("couldn't apply preserved file ownership ($file_uid/$file_gid) to $file, fix manually");
+    }
     rename($file, $finalFile) or $errorLevel = $!;
-
     if ($errorLevel) {
         Common::Log::Error("config.db.new could not be renamed to config.db!");
         Common::Log::Error("Reason is: $errorLevel");
@@ -584,6 +605,7 @@ sub skipFile {
     $res = 1 if ($file =~ /\.dpkg-/);
     $res = 1 if ($file =~ /^\./);
     $res = 1 if ($file =~ /\/CVS$/);
+    $res = 1 if ($file =~ /\.dpkg-/);
 
     return $res;
 }

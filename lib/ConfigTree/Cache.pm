@@ -145,7 +145,10 @@ sub configHash {
         $tags = '' unless defined($tags);
 
         foreach $tag (split(/,/, $tags)) {
-            $hash->{$tag} = $dbRef->{"d:$item:$dict:--default--:$tag"};
+            my $s = $dbRef->{"d:$item:$dict:--default--:$tag"};
+            # untaint; the config tree is trusted
+            $s =~ /^(.*)$/ and $s = $1;
+            $hash->{$tag} = $s;
         }
 
         # ...and try once for $name
@@ -153,7 +156,10 @@ sub configHash {
         $tags = '' unless defined($tags);
 
         foreach $tag (split(/,/, $tags)) {
-            $hash->{$tag} = $dbRef->{"d:$item:$dict:$name:$tag"};
+            my $s = $dbRef->{"d:$item:$dict:$name:$tag"};
+            # untaint; the config tree is trusted
+            $s =~ /^(.*)$/ and $s = $1;
+            $hash->{$tag} = $s;
         }
     }
 
