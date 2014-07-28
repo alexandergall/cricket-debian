@@ -123,6 +123,7 @@ sub setArch {
         $self->{'cdpDef'} = "d L x4 x64";
 
         $self->{'liveHead'} = "L";
+        $self->{'liveHead3'} = "L L";
         $self->{'rraPtr'} = "L";
         $self->{'element'} = "d";
 
@@ -150,7 +151,7 @@ sub setArch {
         $self->{'liveHead'} = "L";
         $self->{'rraPtr'} = "L";
         $self->{'element'} = "d";
-    } elsif ( $archname eq 'alpha-linux' ) {
+    } elsif ( $archname eq 'alpha-linux' or $archname eq 'alpha-linux-gnu') {
         $self->{'statHead'} = "a4 a5 x7 d Q Q Q x80";
         $self->{'dsDef'} = "a20 a20 Q d d x56";
         $self->{'rraDef'} = "a20 x4 Q Q d x72";
