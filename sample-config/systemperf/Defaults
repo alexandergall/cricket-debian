@@ -29,7 +29,7 @@ target --default--
     max-size      = undef
 
 OID    hrSystemNumUsers     1.3.6.1.2.1.25.1.5.0
-OID    hrSystemProcesses    1.3.6.1.2.1.25.1.6
+OID    hrSystemProcesses    1.3.6.1.2.1.25.1.6.0
 OID    hrStorageName        1.3.6.1.2.1.25.2.3.1.3
 OID    hrStorageSize        1.3.6.1.2.1.25.2.3.1.5
 OID    hrStorageUsed        1.3.6.1.2.1.25.2.3.1.6
