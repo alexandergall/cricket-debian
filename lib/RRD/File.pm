@@ -196,7 +196,7 @@ sub loadHeader {
     {
         my ($block);
         my ($last_up, $last_up_usec);
-        if ($v eq "0001" || $v eq "0002") {
+        if ($v eq "0001" || $v eq "0002" || $v eq "0003") {
            $block = $self->_readNextBlock(sizeof($fmt->format('liveHead')));
            croak("Could not read live header") unless (defined($block));
            $last_up = unpack($fmt->format('liveHead'), $block);
