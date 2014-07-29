@@ -1,4 +1,4 @@
-#!/usr/local/bin/perl -w
+#!/usr/bin/perl -w
 # -*- perl -*-
 
 # Cricket: a configuration, polling and data display wrapper for RRD files
@@ -400,9 +400,11 @@ sub retrieveData {
             for (my $i = 0; $i <= $#results; $i = $i+1) {
                 if ($transformList->[$i]) {
                     my($type, $index, $value) = split(/:/, $results[$i], 3);
-                    my $nvalue = $transformList->[$i]->($value);
-                    Debug("Applying transformation $value -> $nvalue");
-                    $results[$i] = $type.':'.$index.':'.$nvalue;
+                    if (defined($value) and $value ne 'U') {
+                        my $nvalue = $transformList->[$i]->($value);
+                        Debug("Applying transformation $value -> $nvalue");
+                        $results[$i] = $type.':'.$index.':'.$nvalue;
+                    }
                 }
             }
             push(@mixedResults, @results);
