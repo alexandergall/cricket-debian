@@ -1,0 +1,35 @@
+From: Alexander Gall <alexander.gall@gmail.com>
+Date: Tue, 29 Jul 2014 16:27:04 +0200
+Subject: gall_transform_resilience
+
+Make the transform feature more resilient against misconfiguration or
+SNMP failures.
+---
+ collector |   10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/collector b/collector
+index f91fc34..6bf09f5 100755
+--- a/collector
++++ b/collector
+@@ -1,4 +1,4 @@
+-#!/usr/local/bin/perl -w
++#!/usr/bin/perl -w
+ # -*- perl -*-
+ 
+ # Cricket: a configuration, polling and data display wrapper for RRD files
+@@ -400,9 +400,11 @@ sub retrieveData {
+             for (my $i = 0; $i <= $#results; $i = $i+1) {
+                 if ($transformList->[$i]) {
+                     my($type, $index, $value) = split(/:/, $results[$i], 3);
+-                    my $nvalue = $transformList->[$i]->($value);
+-                    Debug("Applying transformation $value -> $nvalue");
+-                    $results[$i] = $type.':'.$index.':'.$nvalue;
++                    if (defined($value) and $value ne 'U') {
++                        my $nvalue = $transformList->[$i]->($value);
++                        Debug("Applying transformation $value -> $nvalue");
++                        $results[$i] = $type.':'.$index.':'.$nvalue;
++                    }
+                 }
+             }
+             push(@mixedResults, @results);

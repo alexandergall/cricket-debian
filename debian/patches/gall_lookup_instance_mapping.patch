@@ -1,0 +1,164 @@
+From: Alexander Gall <alexander.gall@gmail.com>
+Date: Tue, 29 Jul 2014 16:28:42 +0200
+Subject: gall_lookup_instance_mapping
+
+This patch implements new semantics for the instance mapping feature.
+If the new key "lookup" is set to true and not match key is present,
+the instance is obtained directly from the value of the baseOID.
+
+An example usage is for the CISCO-NTP-MIB, where cntpSysPeer holds the
+association ID of the NTP system peer, which is used as an index into
+the cntpPeersVarTable.
+---
+ lib/Common/Map.pm |  100 +++++++++++++++++++++++++++++++----------------------
+ 1 file changed, 59 insertions(+), 41 deletions(-)
+
+diff --git a/lib/Common/Map.pm b/lib/Common/Map.pm
+index ae6438c..687589b 100644
+--- a/lib/Common/Map.pm
++++ b/lib/Common/Map.pm
+@@ -90,7 +90,7 @@ sub mapInstance {
+     my($cachedInst) = $metaRef->{'last-inst'};
+     if (defined($cachedInst)) {
+         $target->{'inst'} = $cachedInst;
+-        $target->{'--verify-mapkey--'} = $mapkey;
++        defined($match) and $target->{'--verify-mapkey--'} = $mapkey;
+     } else {
+         my($inst) = mapLookup($name, $target);
+         if (! defined($inst)) {
+@@ -105,8 +105,10 @@ sub mapInstance {
+             $target->{'inst'} = $inst;
+ 
+             # save it for next time
+-            $metaRef->{'last-inst'} = $inst;
+-            $rrd->setMeta($metaRef);
++            if (defined($match)) {
++                $metaRef->{'last-inst'} = $inst;
++                $rrd->setMeta($metaRef);
++            }
+         }
+     }
+ }
+@@ -124,68 +126,84 @@ sub mapLookup {
+     my($mapRef) = $Common::global::gCT->configHash($name,
+                                                    'map', $mapkey, $target);
+     my($match) = $mapRef->{'match'};
+-    if (! defined($match)) {
+-        Warn("No match tag found in map entry $mapkey");
++    my($lookup) = $mapRef->{'lookup'};
++    defined $lookup and $lookup = isTrue($lookup);
++    if (! defined($match) and ! defined($lookup)) {
++        Warn("No match or lookup tag found in map entry $mapkey");
+         return;
+     }
+-    $match = ConfigTree::Cache::expandString($match, $target, \&Warn);
++    if ($lookup and defined($match)) {
++        Warn("Ignoring lookup tag in map entry $mapkey");
++        $lookup = undef;
++    }
++    defined($match) and $match = ConfigTree::Cache::expandString($match, $target, \&Warn);
+ 
+     # this is expected to hold a string like this: comm@host:port
+     my($snmp) = $target->{'snmp'};
+-
++    
+     if (! defined($main::gMapCache{$snmp}->{$mapkey})) {
+         # cache does not exist, so try to load it
+         my($baseOID) = $mapRef->{'base-oid'};
+-
++        
+         my($oidMap) = $Common::global::gCT->configHash($name, 'oid');
+         my($oid) = Common::Util::mapOid($oidMap, $baseOID);
+-
++        
+         if (! defined($oid)) {
+             Warn("Missing base-oid in $mapkey map entry.");
+             return;
+         }
+-
++        
+         my($hp) = $snmp;
+         $hp =~ s/^.*@//;        # remove the community string, if it's there
+         # (This keeps it out of the logfiles, which seems like
+         # a good idea.)
+ 
+-        Info("Walking $baseOID for $hp to resolve $mapkey mapping");
+-        my(@ret) = snmpUtils::walk($snmp, $oid);
+-
+-        my($row);
+-        foreach $row (@ret) {
+-            my($inst, $name) = split(':', $row, 2);
+-            $main::gMapCache{$snmp}->{$mapkey}->{$name} = $inst;
++        if (defined($match)) {
++            Info("Walking $baseOID for $hp to resolve $mapkey mapping");
++            my(@ret) = snmpUtils::walk($snmp, $oid);
++        
++            my($row);
++            foreach $row (@ret) {
++                my($inst, $name) = split(':', $row, 2);
++                $main::gMapCache{$snmp}->{$mapkey}->{$name} = $inst;
++            }
++        } else {
++            Info("Getting $baseOID for $hp to resolve $mapkey mapping");
++            my ($inst) = snmpUtils::get($snmp, $oid);
++            $main::gMapCache{$snmp}->{$mapkey} = $inst;
+         }
+     }
+-
+-    # find the inst number -- either by using a regexp match,
+-    # or by a simple table lookup.
+-
+-    # does it look like a regexp? (i.e. "/^foo$/") (we allow
+-    # whitespace, in case they are incompetent with the quote key...
+-    if ($match =~ /^\s*\/(.*)\/\s*$/) {
+-        # this is a regexp
+-        $match = $1;
+-
+-        Debug("Regexp is /$match/i");
+-
+-        # this resets the iterator, so the each will get everything
+-        scalar keys(%{$main::gMapCache{$snmp}->{$mapkey}});
+-
+-        my($name, $inst);
+-        while (($name, $inst) = each(%{$main::gMapCache{$snmp}->{$mapkey}})) {
+-            Debug("  checking: $name");
+-            if ($name =~ /$match/i) {
+-                return $inst;
++    
++    if (defined($match)) {
++        # find the inst number -- either by using a regexp match,
++        # or by a simple table lookup.
++    
++        # does it look like a regexp? (i.e. "/^foo$/") (we allow
++        # whitespace, in case they are incompetent with the quote key...
++        if ($match =~ /^\s*\/(.*)\/\s*$/) {
++            # this is a regexp
++            $match = $1;
++            
++            Debug("Regexp is /$match/i");
++            
++            # this resets the iterator, so the each will get everything
++            scalar keys(%{$main::gMapCache{$snmp}->{$mapkey}});
++            
++            my($name, $inst);
++            while (($name, $inst) = each(%{$main::gMapCache{$snmp}->{$mapkey}})) {
++                Debug("  checking: $name");
++                if ($name =~ /$match/i) {
++                    return $inst;
++                }
+             }
++            # didn't match anything... return nothing.
++            return;
++        } else {
++            Debug("Attempting lookup on $match.");
++            return $main::gMapCache{$snmp}->{$mapkey}->{$match};
+         }
+-        # didn't match anything... return nothing.
+-        return;
+     } else {
+-        Debug("Attempting lookup on $match.");
+-        return $main::gMapCache{$snmp}->{$mapkey}->{$match};
++        return $main::gMapCache{$snmp}->{$mapkey};
+     }
+ }
+ 

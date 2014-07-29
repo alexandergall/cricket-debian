@@ -9,3 +9,5 @@
 09_white-space.patch
 10_getFormat.c.patch
 gall_add_transforms.patch
+gall_transform_resilience.patch
+gall_lookup_instance_mapping.patch
